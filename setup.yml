@@ -37,7 +37,6 @@
     - matrix-bridge-heisenbridge
     - matrix-bridge-hookshot
     - matrix-bot-matrix-reminder-bot
-    - matrix-bot-matrix-registration-bot
     - matrix-bot-buscarron
     - matrix-bot-honoroit
     - matrix-bot-go-neb
@@ -45,6 +44,7 @@
     - matrix-synapse
     - matrix-dendrite
     - matrix-synapse-admin
+    - matrix-bot-matrix-registration-bot
     - matrix-prometheus-node-exporter
     - matrix-prometheus
     - matrix-grafana
