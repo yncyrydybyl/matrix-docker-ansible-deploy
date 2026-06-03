@@ -53,6 +53,8 @@ For a more custom setup, see the [Other configuration options](#other-configurat
 
   - [Configuring continuwuity](configuring-playbook-continuwuity.md), if you've switched to the [continuwuity](https://continuwuity.org) homeserver implementation
 
+  - [Configuring Tuwunel](configuring-playbook-tuwunel.md), if you've switched to the [Tuwunel](https://matrix-construct.github.io/tuwunel/) homeserver implementation
+
   - [Configuring Dendrite](configuring-playbook-dendrite.md), if you've switched to the [Dendrite](https://matrix-org.github.io/dendrite) homeserver implementation
 
 - Server components:
@@ -104,15 +106,11 @@ Extend and modify how users are authenticated on your homeserver.
 
 - [Setting up Ketesa](configuring-playbook-ketesa.md)
 
-- [Setting up matrix-registration](configuring-playbook-matrix-registration.md)
-
 - [Setting up the REST authentication password provider module](configuring-playbook-rest-auth.md) (advanced)
 
 - [Setting up the Shared Secret Auth password provider module](configuring-playbook-shared-secret-auth.md) (advanced)
 
 - [Setting up the LDAP authentication password provider module](configuring-playbook-ldap-auth.md) (advanced)
-
-- [Setting up matrix-ldap-registration-proxy](configuring-playbook-matrix-ldap-registration-proxy.md) (advanced)
 
 - [Setting up Synapse Simple Antispam](configuring-playbook-synapse-simple-antispam.md) (advanced)
 
@@ -278,6 +276,10 @@ Various services that don't fit any other categories.
 - [Setting up ma1sd Identity Server](configuring-playbook-ma1sd.md) (removed; this component has been unmaintained for a long time, so it has been removed from the playbook.)
 
 - [Setting up matrix-bot-chatgpt](configuring-playbook-bot-chatgpt.md) (unmaintained; the bridge's author suggests taking a look at [baibot](https://github.com/etkecc/baibot) as a replacement, which can also be [installed using this playbook](configuring-playbook-bot-baibot.md))
+
+- [Setting up matrix-ldap-registration-proxy](configuring-playbook-matrix-ldap-registration-proxy.md) (removed; the repository of the source code has been removed)
+
+- [Setting up matrix-registration](configuring-playbook-matrix-registration.md) (removed; this component has been unmaintained)
 
 - [Setting up Mautrix Facebook bridging](configuring-playbook-bridge-mautrix-facebook.md) (deprecated in favor of the Messenger/Instagram bridge with [mautrix-meta-messenger](configuring-playbook-bridge-mautrix-meta-messenger.md))
 

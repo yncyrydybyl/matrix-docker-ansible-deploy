@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.152.0
+matrix_synapse_version: v1.153.0
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -86,7 +86,6 @@ matrix_synapse_container_image_customizations_dockerfile_body_custom: ''
 matrix_synapse_container_image: "{{ matrix_synapse_container_image_registry_prefix }}{{ matrix_synapse_container_image_name }}:{{ matrix_synapse_container_image_tag }}"
 matrix_synapse_container_image_name: "{{ matrix_synapse_github_org_and_repo }}"
 matrix_synapse_container_image_tag: "{{ matrix_synapse_version }}"
-matrix_synapse_container_image_force_pull: "{{ matrix_synapse_container_image.endswith(':latest') }}"
 matrix_synapse_container_image_registry_prefix: "{{ 'localhost/' if matrix_synapse_container_image_self_build else matrix_synapse_container_image_registry_prefix_upstream }}"
 matrix_synapse_container_image_registry_prefix_upstream: "{{ matrix_synapse_container_image_registry_prefix_upstream_default }}"
 matrix_synapse_container_image_registry_prefix_upstream_default: "ghcr.io/"
@@ -1474,6 +1473,14 @@ matrix_synapse_experimental_features_msc4306_enabled: false
 # See https://github.com/matrix-org/matrix-spec-proposals/pull/4354
 matrix_synapse_experimental_features_msc4354_enabled: false
 
+# Controls whether to enable the MSC4429 experimental feature (profile updates for legacy `/sync`).
+#
+# This allows servers to notify clients using the legacy `/sync` endpoint of profile changes
+# for other users, enabling features such as user status.
+#
+# See https://github.com/matrix-org/matrix-spec-proposals/pull/4429
+matrix_synapse_experimental_features_msc4429_enabled: false
+
 # Enable this to activate the REST auth password provider module.
 # See: https://github.com/ma1uta/matrix-synapse-rest-password-provider
 matrix_synapse_ext_password_provider_rest_auth_enabled: false
@@ -1617,7 +1624,7 @@ matrix_synapse_ext_encryption_config_yaml: |
 # Enabling this will enable customizations and inject the appropriate Dockerfile clauses for installing synapse-s3-storage-provider.
 matrix_synapse_ext_synapse_s3_storage_provider_enabled: false
 # renovate: datasource=github-releases depName=matrix-org/synapse-s3-storage-provider
-matrix_synapse_ext_synapse_s3_storage_provider_version: 1.6.0
+matrix_synapse_ext_synapse_s3_storage_provider_version: 1.6.1
 # Controls whether media from this (local) server is stored in s3-storage-provider
 matrix_synapse_ext_synapse_s3_storage_provider_store_local: true
 # Controls whether media from remote servers is stored in s3-storage-provider
@@ -1670,7 +1677,6 @@ matrix_s3_goofys_container_image: "{{ matrix_s3_goofys_container_image_registry_
 matrix_s3_goofys_container_image_registry_prefix: "{{ matrix_s3_goofys_container_image_registry_prefix_upstream }}"
 matrix_s3_goofys_container_image_registry_prefix_upstream: "{{ matrix_s3_goofys_container_image_registry_prefix_upstream_default }}"
 matrix_s3_goofys_container_image_registry_prefix_upstream_default: "docker.io/"
-matrix_s3_goofys_container_image_force_pull: "{{ matrix_s3_goofys_container_image.endswith(':latest') }}"
 matrix_s3_media_store_custom_endpoint: "your-custom-endpoint"
 matrix_s3_media_store_bucket_name: "your-bucket-name"
 matrix_s3_media_store_aws_access_key: "your-aws-access-key"
@@ -1788,7 +1794,6 @@ matrix_synapse_rust_synapse_compress_state_container_image_version: v0.0.3
 matrix_synapse_rust_synapse_compress_state_container_image_registry_prefix: "{{ matrix_synapse_rust_synapse_compress_state_container_image_registry_prefix_upstream }}"
 matrix_synapse_rust_synapse_compress_state_container_image_registry_prefix_upstream: "{{ matrix_synapse_rust_synapse_compress_state_container_image_registry_prefix_upstream_default }}"
 matrix_synapse_rust_synapse_compress_state_container_image_registry_prefix_upstream_default: "registry.gitlab.com/"
-matrix_synapse_rust_synapse_compress_state_container_image_force_pull: "{{ matrix_synapse_rust_synapse_compress_state_container_image.endswith(':stable') or matrix_synapse_rust_synapse_compress_state_container_image.endswith(':latest') }}"
 
 matrix_synapse_rust_synapse_compress_state_base_path: "{{ matrix_base_data_path }}/rust-synapse-compress-state"
 matrix_synapse_rust_synapse_compress_state_synapse_compress_state_in_container_path: "/usr/local/bin/synapse_compress_state"
@@ -1847,7 +1852,7 @@ matrix_synapse_register_user_script_matrix_authentication_service_path: ""
 matrix_synapse_reverse_proxy_companion_enabled: "{{ matrix_synapse_enabled and matrix_synapse_workers_enabled }}"
 
 # renovate: datasource=docker depName=nginx
-matrix_synapse_reverse_proxy_companion_version: 1.30.0-alpine
+matrix_synapse_reverse_proxy_companion_version: 1.31.1-alpine
 
 matrix_synapse_reverse_proxy_companion_base_path: "{{ matrix_synapse_base_path }}/reverse-proxy-companion"
 matrix_synapse_reverse_proxy_companion_confd_path: "{{ matrix_synapse_reverse_proxy_companion_base_path }}/conf.d"
@@ -1870,7 +1875,6 @@ matrix_synapse_reverse_proxy_companion_container_image_registry_prefix: "{{ matr
 matrix_synapse_reverse_proxy_companion_container_image_registry_prefix_upstream: "{{ matrix_synapse_reverse_proxy_companion_container_image_registry_prefix_upstream_default }}"
 matrix_synapse_reverse_proxy_companion_container_image_registry_prefix_upstream_default: "docker.io/"
 matrix_synapse_reverse_proxy_companion_container_image_tag: "{{ matrix_synapse_reverse_proxy_companion_version }}"
-matrix_synapse_reverse_proxy_companion_container_image_force_pull: "{{ matrix_synapse_reverse_proxy_companion_container_image.endswith(':latest') }}"
 
 matrix_synapse_reverse_proxy_companion_container_network: "{{ matrix_synapse_container_network }}"
 

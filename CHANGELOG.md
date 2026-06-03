@@ -1,3 +1,64 @@
+# 2026-05-24
+
+## matrix-ldap-registration-proxy has been removed from the playbook
+
+The [matrix-ldap-registration-proxy](./docs/configuring-playbook-matrix-ldap-registration-proxy.md) service has been removed from the playbook, as the source code and the container image have become unavailable.
+
+The playbook will let you know if you're using any `matrix_ldap_registration_proxy_*` variables. You'll need to remove them from `vars.yml` and potentially [uninstall the component manually](./docs/configuring-playbook-matrix-ldap-registration-proxy.md#uninstalling-the-component-manually).
+
+# 2026-05-23
+
+## Go-NEB has been removed from the playbook
+
+[Go-NEB](./docs/configuring-playbook-bot-go-neb.md) has been removed from the playbook, as it has been discontinued since June 2023.
+
+The playbook will let you know if you're using any `matrix_bot_go_neb_*` variables. You'll need to remove them from `vars.yml` and potentially [uninstall the bot manually](./docs/configuring-playbook-bot-go-neb.md#uninstalling-go-neb-manually).
+
+# 2026-05-19
+
+## matrix-registration has been removed from the playbook
+
+The [matrix-registration](./docs/configuring-playbook-matrix-registration.md) service has been removed from the playbook, as it has been unmaintained (archived) since November, 2025.
+
+The playbook will let you know if you're using any `matrix_registration_*` variables. You'll need to remove them from `vars.yml` and potentially [uninstall the component manually](./docs/configuring-playbook-matrix-registration.md#uninstalling-the-component-manually).
+
+# 2026-05-18
+
+## LiveKit Server has been upgraded to v1.12.0
+
+The playbook now ships [LiveKit Server](./docs/configuring-playbook-livekit-server.md) v1.12.0. See the [upstream release notes](https://github.com/livekit/livekit/releases/tag/v1.12.0) for details.
+
+This release tightens TURN security:
+
+- **TURN credentials now carry a TTL** (default: 300 seconds), exposed via `livekit_server_config_turn_ttl_seconds`.
+- **TURN no longer relays traffic to restricted peer CIDRs** (loopback, link-local, multicast, private, unspecified) by default. If your setup legitimately requires it, list the ranges in `livekit_server_config_turn_allow_restricted_peer_cidrs`.
+
+    For example, to allow TURN to reach the common [RFC1918](https://www.rfc-editor.org/rfc/rfc1918) private ranges, add to your `vars.yml`:
+    ```yaml
+    livekit_server_config_turn_allow_restricted_peer_cidrs:
+      - 10.0.0.0/8
+      - 172.16.0.0/12
+      - 192.168.0.0/16
+    ```
+
+    Adjust the ranges to match your network. To deny specific CIDRs (taking precedence over the allow list above), use `livekit_server_config_turn_deny_peer_cidrs` in the same shape.
+
+
+# 2026-05-07
+
+## Tuwunel support
+
+Thanks to [Jason Volk](https://github.com/jevolk), the playbook now supports the [Tuwunel](./docs/configuring-playbook-tuwunel.md) homeserver as an optional alternative to Synapse.
+
+Tuwunel is a fork of [conduwuit](./docs/configuring-playbook-conduwuit.md) written in Rust. The former conduwuit maintainer [endorses Tuwunel as conduwuit's successor](https://github.com/spantaleev/matrix-docker-ansible-deploy/pull/5200#issuecomment-4396211185). Like [Continuwuity](./docs/configuring-playbook-continuwuity.md), Tuwunel continues development on top of conduwuit's database format.
+
+Existing installations do **not** need to be updated. **Synapse is still the default homeserver implementation** installed by the playbook.
+
+People that used to run conduwuit may wish to [migrate from conduwuit to Tuwunel](./docs/configuring-playbook-tuwunel.md#migrating-from-conduwuit) via the new `tuwunel-migrate-from-conduwuit` tag, which performs an in-place binary-swap migration that reads the conduwuit database directly.
+
+**The homeserver implementation of an existing server cannot be changed** (e.g. from Synapse/Conduit/Dendrite/Continuwuity to Tuwunel) without data loss. The exception is conduwuit, due to the shared database format.
+
+
 # 2026-04-24
 
 ## Support for bridging to Meshtastic via meshtastic-matrix-relay

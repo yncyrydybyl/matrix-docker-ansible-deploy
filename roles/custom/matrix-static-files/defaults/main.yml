@@ -35,7 +35,6 @@ matrix_static_files_container_image_registry_prefix: "{{ matrix_static_files_con
 matrix_static_files_container_image_registry_prefix_upstream: "{{ matrix_static_files_container_image_registry_prefix_upstream_default }}"
 matrix_static_files_container_image_registry_prefix_upstream_default: "docker.io/"
 matrix_static_files_container_image_tag: "{{ 'latest' if matrix_static_files_version == 'latest' else (matrix_static_files_version + '-alpine') }}"
-matrix_static_files_container_image_force_pull: "{{ matrix_static_files_container_image.endswith(':latest') }}"
 
 matrix_static_files_container_network: "{{ matrix_static_files_identifier }}"
 

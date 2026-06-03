@@ -86,7 +86,6 @@
     - custom/matrix-bot-buscarron
     - custom/matrix-bot-baibot
     - custom/matrix-bot-honoroit
-    - custom/matrix-bot-go-neb
     - custom/matrix-bot-mjolnir
     - custom/matrix-bot-draupnir
     - custom/matrix-cactus-comments
@@ -98,6 +97,7 @@
     - custom/matrix-dendrite
     - custom/matrix-conduit
     - custom/matrix-continuwuity
+    - custom/matrix-tuwunel
     - custom/matrix-ketesa
     - custom/matrix-synapse-usage-exporter
     - galaxy/prometheus_nginxlog_exporter
@@ -106,7 +106,6 @@
     - galaxy/prometheus
     - galaxy/grafana
     - custom/matrix-prometheus-services-connect
-    - custom/matrix-registration
     - custom/matrix-client-element
     - custom/matrix-client-commet
     - galaxy/hydrogen
@@ -116,7 +115,6 @@
     - custom/matrix-client-fluffychat
     - galaxy/jitsi
     - custom/matrix-user-verification-service
-    - custom/matrix-ldap-registration-proxy
     - galaxy/etherpad
     - custom/matrix-sygnal
     - galaxy/ntfy

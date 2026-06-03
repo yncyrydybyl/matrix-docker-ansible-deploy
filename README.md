@@ -4,7 +4,7 @@
 
 ## 🎯 Purpose
 
-This [Ansible](https://www.ansible.com/) playbook is meant to help you run your own [Matrix](http://matrix.org/) homeserver, along with the [various services](#supported-services) related to that.
+This [Ansible](https://www.ansible.com/) playbook is meant to help you run your own [Matrix](http://matrix.org/) homeserver, along with the [various services](#-supported-services) related to that.
 
 That is, it lets you join the Matrix network using your own user ID like `@alice:example.com`, all hosted on your own server (see [prerequisites](docs/prerequisites.md)).
 
@@ -53,6 +53,7 @@ The homeserver is the backbone of your Matrix system. Choose one from the follow
 | [Synapse](https://github.com/element-hq/synapse) | ✅ | Storing your data and managing your presence in the [Matrix](http://matrix.org/) network | [Link](docs/configuring-playbook-synapse.md) |
 | [Conduit](https://conduit.rs) | ❌ | Storing your data and managing your presence in the [Matrix](http://matrix.org/) network. Conduit is a lightweight open-source server implementation of the Matrix Specification with a focus on easy setup and low system requirements | [Link](docs/configuring-playbook-conduit.md) |
 | [continuwuity](https://continuwuity.org) | ❌ | Storing your data and managing your presence in the [Matrix](http://matrix.org/) network. | [Link](docs/configuring-playbook-continuwuity.md) |
+| [Tuwunel](https://matrix-construct.github.io/tuwunel/) | ❌ | Storing your data and managing your presence in the [Matrix](http://matrix.org/) network. Tuwunel is the official successor to conduwuit. | [Link](docs/configuring-playbook-tuwunel.md) |
 | [Dendrite](https://github.com/element-hq/dendrite) | ❌ | Storing your data and managing your presence in the [Matrix](http://matrix.org/) network. Dendrite is a second-generation Matrix homeserver written in Go, an alternative to Synapse. | [Link](docs/configuring-playbook-dendrite.md) |
 
 ### Clients
@@ -91,8 +92,6 @@ Extend and modify how users are authenticated on your homeserver.
 | [matrix-synapse-rest-auth](https://github.com/ma1uta/matrix-synapse-rest-password-provider) (advanced) | ❌ | REST authentication password provider module | [Link](docs/configuring-playbook-rest-auth.md) |
 |[matrix-synapse-shared-secret-auth](https://github.com/devture/matrix-synapse-shared-secret-auth) (advanced) | ❌ | Password provider module | [Link](docs/configuring-playbook-shared-secret-auth.md) |
 | [matrix-synapse-ldap3](https://github.com/matrix-org/matrix-synapse-ldap3) (advanced) | ❌ | LDAP Auth password provider module | [Link](docs/configuring-playbook-ldap-auth.md) |
-| [matrix-ldap-registration-proxy](https://gitlab.com/activism.international/matrix_ldap_registration_proxy) (advanced) | ❌ | Proxy that handles Matrix registration requests and forwards them to LDAP | [Link](docs/configuring-playbook-matrix-ldap-registration-proxy.md) |
-| [matrix-registration](https://github.com/ZerataX/matrix-registration) | ❌ | Simple python application to have a token based Matrix registration | [Link](docs/configuring-playbook-matrix-registration.md) |
 | [Matrix User Verification Service](https://github.com/matrix-org/matrix-user-verification-service) | ❌ | Service to verify details of a user based on an Open ID token | [Link](docs/configuring-playbook-user-verification-service.md) |
 | [synapse-simple-antispam](https://github.com/t2bot/synapse-simple-antispam) (advanced) | ❌ | Spam checker module | [Link](docs/configuring-playbook-synapse-simple-antispam.md) |
 
@@ -121,7 +120,7 @@ Bridges can be used to connect your Matrix installation with third-party communi
 | [mautrix-bluesky](https://github.com/mautrix/bluesky) | ❌ | Bridge to [Bluesky](https://bsky.social/) | [Link](docs/configuring-playbook-bridge-mautrix-bluesky.md) |
 | [mautrix-twitter](https://github.com/mautrix/twitter) | ❌ | Bridge to [Twitter](https://twitter.com/) | [Link](docs/configuring-playbook-bridge-mautrix-twitter.md) |
 | [mautrix-googlechat](https://github.com/mautrix/googlechat) | ❌ | Bridge to [Google Chat](https://en.wikipedia.org/wiki/Google_Chat) | [Link](docs/configuring-playbook-bridge-mautrix-googlechat.md) |
-| [mautrix-meta](https://github.com/mautrix/instagram) | ❌ | Bridge to [Messenger](https://messenger.com/) and [Instagram](https://instagram.com/) | Link for [Messenger](docs/configuring-playbook-bridge-mautrix-meta-messenger.md) / [Instagram](docs/configuring-playbook-bridge-mautrix-meta-instagram.md) |
+| [mautrix-meta](https://github.com/mautrix/meta) | ❌ | Bridge to [Messenger](https://messenger.com/) and [Instagram](https://instagram.com/) | Link for [Messenger](docs/configuring-playbook-bridge-mautrix-meta-messenger.md) / [Instagram](docs/configuring-playbook-bridge-mautrix-meta-instagram.md) |
 | [mautrix-signal](https://github.com/mautrix/signal) | ❌ | Bridge to [Signal](https://www.signal.org/) | [Link](docs/configuring-playbook-bridge-mautrix-signal.md) |
 | [beeper-linkedin](https://github.com/beeper/linkedin) | ❌ | Bridge to [LinkedIn](https://www.linkedin.com/) | [Link](docs/configuring-playbook-bridge-beeper-linkedin.md) |
 | [matrix-appservice-irc](https://github.com/matrix-org/matrix-appservice-irc) | ❌ | Bridge to [IRC](https://wikipedia.org/wiki/Internet_Relay_Chat) | [Link](docs/configuring-playbook-bridge-appservice-irc.md) |
