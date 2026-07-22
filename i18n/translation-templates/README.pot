@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: matrix-docker-ansible-deploy \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-19 07:40+0000\n"
+"POT-Creation-Date: 2026-07-16 13:47+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -257,7 +257,7 @@ msgid "[Link](docs/configuring-playbook-client-cinny.md)"
 msgstr ""
 
 #: ../../../README.md:0
-msgid "[Sable](https://github.com/7w1/sable)"
+msgid "[Sable](https://github.com/SableClient/Sable)"
 msgstr ""
 
 #: ../../../README.md:0
@@ -288,11 +288,23 @@ msgstr ""
 msgid "[Link](docs/configuring-playbook-client-fluffychat-web.md)"
 msgstr ""
 
-#: ../../../README.md:72
+#: ../../../README.md:0
+msgid "[Commet](https://github.com/commetchat/commet)"
+msgstr ""
+
+#: ../../../README.md:0
+msgid "Matrix web client"
+msgstr ""
+
+#: ../../../README.md:0
+msgid "[Link](docs/configuring-playbook-client-commet.md)"
+msgstr ""
+
+#: ../../../README.md:73
 msgid "Server Components"
 msgstr ""
 
-#: ../../../README.md:74
+#: ../../../README.md:75
 msgid "Services that run on the server to make the various parts of your installation work."
 msgstr ""
 
@@ -380,11 +392,11 @@ msgstr ""
 msgid "[Link](docs/configuring-playbook-matrix-rtc.md)"
 msgstr ""
 
-#: ../../../README.md:86
+#: ../../../README.md:87
 msgid "Authentication"
 msgstr ""
 
-#: ../../../README.md:88
+#: ../../../README.md:89
 msgid "Extend and modify how users are authenticated on your homeserver."
 msgstr ""
 
@@ -422,18 +434,6 @@ msgstr ""
 
 #: ../../../README.md:0
 msgid "[Link](docs/configuring-playbook-ldap-auth.md)"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "[matrix-ldap-registration-proxy](https://gitlab.com/activism.international/matrix_ldap_registration_proxy) (advanced)"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "Proxy that handles Matrix registration requests and forwards them to LDAP"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "[Link](docs/configuring-playbook-matrix-ldap-registration-proxy.md)"
 msgstr ""
 
 #: ../../../README.md:0
@@ -557,6 +557,18 @@ msgid "[Link](docs/configuring-playbook-bridge-mautrix-gmessages.md)"
 msgstr ""
 
 #: ../../../README.md:0
+msgid "[mautrix-gvoice](https://github.com/mautrix/gvoice)"
+msgstr ""
+
+#: ../../../README.md:0
+msgid "Bridge to [Google Voice](https://voice.google.com/)"
+msgstr ""
+
+#: ../../../README.md:0
+msgid "[Link](docs/configuring-playbook-bridge-mautrix-gvoice.md)"
+msgstr ""
+
+#: ../../../README.md:0
 msgid "[mautrix-whatsapp](https://github.com/mautrix/whatsapp)"
 msgstr ""
 
@@ -578,6 +590,18 @@ msgstr ""
 
 #: ../../../README.md:0
 msgid "[Link](docs/configuring-playbook-bridge-mautrix-wsproxy.md)"
+msgstr ""
+
+#: ../../../README.md:0
+msgid "[matrix-rustpush-bridge](https://github.com/jasonlaguidice/imessage)"
+msgstr ""
+
+#: ../../../README.md:0
+msgid "Bridge to [iMessage](https://support.apple.com/messages) via Apple Push Notification service"
+msgstr ""
+
+#: ../../../README.md:0
+msgid "[Link](docs/configuring-playbook-bridge-rustpush.md)"
 msgstr ""
 
 #: ../../../README.md:0
@@ -662,18 +686,6 @@ msgstr ""
 
 #: ../../../README.md:0
 msgid "[Link](docs/configuring-playbook-bridge-appservice-irc.md)"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "[matrix-appservice-kakaotalk](https://src.miscworks.net/fair/matrix-appservice-kakaotalk)"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "Bridge to [Kakaotalk](https://www.kakaocorp.com/page/service/service/KakaoTalk?lang=ENG)"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "[Link](docs/configuring-playbook-bridge-appservice-kakaotalk.md)"
 msgstr ""
 
 #: ../../../README.md:0
@@ -796,11 +808,11 @@ msgstr ""
 msgid "[Link](docs/configuring-playbook-bridge-postmoogle.md)"
 msgstr ""
 
-#: ../../../README.md:140
+#: ../../../README.md:141
 msgid "Bots"
 msgstr ""
 
-#: ../../../README.md:142
+#: ../../../README.md:143
 msgid "Bots provide various additional functionality to your installation."
 msgstr ""
 
@@ -826,18 +838,6 @@ msgstr ""
 
 #: ../../../README.md:0
 msgid "[Link](docs/configuring-playbook-bot-matrix-reminder-bot.md)"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "[matrix-registration-bot](https://github.com/moan0s/matrix-registration-bot)"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "Bot for invitations by creating and managing registration tokens"
-msgstr ""
-
-#: ../../../README.md:0
-msgid "[Link](docs/configuring-playbook-bot-matrix-registration-bot.md)"
 msgstr ""
 
 #: ../../../README.md:0

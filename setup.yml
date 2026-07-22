@@ -57,7 +57,6 @@
     - custom/matrix-bridge-appservice-discord
     - custom/matrix-bridge-appservice-slack
     - custom/matrix-bridge-appservice-irc
-    - custom/matrix-bridge-appservice-kakaotalk
     - custom/matrix-bridge-beeper-linkedin
     - custom/matrix-bridge-wechat
     - custom/matrix-bridge-mautrix-twitter
@@ -67,11 +66,13 @@
     - custom/matrix-bridge-mautrix-telegram
     - custom/matrix-bridge-mautrix-signal
     - custom/matrix-bridge-mautrix-gmessages
+    - custom/matrix-bridge-mautrix-gvoice
     - custom/matrix-bridge-mautrix-whatsapp
     - custom/matrix-bridge-mautrix-wsproxy
     - custom/matrix-bridge-mautrix-discord
     - custom/matrix-bridge-mautrix-slack
     - custom/matrix-bridge-mautrix-bluesky
+    - custom/matrix-bridge-rustpush
     - custom/matrix-bridge-mx-puppet-groupme
     - custom/matrix-bridge-mx-puppet-steam
     - custom/matrix-bridge-postmoogle
@@ -81,7 +82,6 @@
     - custom/matrix-bridge-hookshot
     - custom/matrix-bridge-meshtastic-relay
     - custom/matrix-bot-matrix-reminder-bot
-    - custom/matrix-bot-matrix-registration-bot
     - custom/matrix-bot-maubot
     - custom/matrix-bot-buscarron
     - custom/matrix-bot-baibot
