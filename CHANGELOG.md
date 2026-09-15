@@ -1,3 +1,92 @@
+# 2026-08-20
+
+## MatrixRTC transports are advertised in the client well-known again
+
+This only affects you if you have the [Matrix RTC stack](docs/configuring-playbook-matrix-rtc.md) or [Element Call](docs/configuring-playbook-element-call.md) enabled.
+
+Yesterday's changelog entry announced that the `org.matrix.msc4143.rtc_foci` property was gone from the `/.well-known/matrix/client` file. That turned out to be premature and has been reverted, so the property is published again as it always was.
+
+The property is indeed dropped from [MSC4143](https://github.com/matrix-org/matrix-spec-proposals/pull/4143) and [Element Call v0.24.0](https://github.com/element-hq/element-call/releases/tag/v0.24.0) no longer reads it, but Element Web (and likely other clients who move slowly or are otherwise outdated) does not ship that version of Element Call yet. Element Web v1.12.26 bundles Element Call v0.22.0, which still discovers your transport through the well-known property. It cannot use the homeserver's `/_matrix/client/unstable/org.matrix.msc4143/rtc/transports` API instead, because Element Call runs as a widget there and a widget holds no access token, while that API requires authentication. Newer Element Call versions ask their host client for the transports over the widget API ([MSC4515](https://github.com/matrix-org/matrix-spec-proposals/pull/4515)), which is what will eventually make the property unnecessary.
+
+Dropping the property therefore broke Element Call for Element Web and Element Desktop users, with a `MISSING_MATRIX_RTC_TRANSPORT` error when starting a call. Re-running the playbook (`just install-all`) brings the property back and fixes calls.
+
+If you worked around this by publishing the property yourself via `matrix_static_files_file_matrix_client_configuration_extension_json`, you can drop that from your `vars.yml` file now. The `matrix_static_files_file_matrix_client_property_org_matrix_msc4143_rtc_foci_custom` variable and its companions are back as well.
+
+# 2026-08-13
+
+## The homeserver root path redirects to clients other than Element Web
+
+Visiting `https://matrix.example.com/` used to redirect you to [Element Web](docs/configuring-playbook-client-element-web.md), but only if Element Web was the client installed by the playbook. With any of the other web clients (Cinny, Commet, FluffyChat, Hydrogen, SchildiChat, Sable), you would land on a bare Synapse page.
+
+The redirection now follows whichever of these clients you have enabled. When several are enabled, Element Web wins, followed by the others in the order that [`group_vars/matrix_servers`](group_vars/matrix_servers) lists them.
+
+To send people somewhere else (or nowhere at all), define `matrix_playbook_public_client_root_redirection_url` in your `vars.yml` file. An empty value disables the redirection.
+
+## Support for Meowlnir
+
+The playbook can now install [Meowlnir](https://github.com/maunium/meowlnir), an opinionated Matrix moderation bot, optimized for Synapse.
+
+Meowlnir joins [Draupnir](docs/configuring-playbook-bot-draupnir.md) and [Mjolnir](docs/configuring-playbook-bot-mjolnir.md) as a 3rd moderation option, speaking the same [policy list](https://the-draupnir-project.github.io/draupnir-documentation/concepts/policy-lists) protocol so that it can subscribe to the same community ban lists. Unlike the others, it can override individual policies coming from lists you do not control (by way of an unban policy in a list of your own which is ordered ahead of other policy lists).
+
+You can run it alongside Draupnir while evaluating it — see the documentation for the caveats, the main one being that both want the [synapse-http-antispam](https://github.com/maunium/synapse-http-antispam) module, which only reports to a single consumer.
+
+To get started, see the [Setting up Meowlnir](docs/configuring-playbook-bot-meowlnir.md) documentation page.
+
+
+# 2026-08-06
+
+## (Backward Compatibility Break) Jitsi no longer uses Colibri WebSockets
+
+This only affects you if you have [Jitsi](docs/configuring-playbook-jitsi.md) enabled.
+
+Jitsi has been updated to `stable-11146-1`, which [removes Colibri WebSocket support](https://github.com/jitsi/docker-jitsi-meet/pull/2285) in favour of SCTP data channels. The Jitsi Video Bridge no longer serves HTTP at all, so a few `jitsi_jvb_*` variables are gone. The playbook will tell you which ones, if your configuration still sets them.
+
+If you run [additional JVBs on other hosts](https://github.com/mother-of-all-self-hosting/ansible-role-jitsi/blob/main/docs/configuring-jitsi.md#set-up-additional-jvbs-for-more-video-conferences-optional), the Traefik configuration which routed `/colibri-ws/<server-id>/` to them is now dead and can be removed. Nothing will warn you about that one, as it lives in a free-form `traefik_provider_configuration_extension_yaml` block.
+
+# 2026-07-28
+
+## (Backward Compatibility Break) ntfy users are now declared with hashed passwords
+
+This only affects you if you have enabled authentication for [ntfy](docs/configuring-playbook-ntfy.md) via `ntfy_credentials`.
+
+The ntfy role used to create users by invoking `ntfy user` commands against the running container. Since v2.14.0, ntfy can provision users and access-control entries from its own configuration file, so the role now does that instead. Besides being a lot simpler, this fixes passwords containing spaces never arriving intact.
+
+Replace `ntfy_credentials` with `ntfy_auth_users_custom`, which takes bcrypt password hashes rather than plaintext passwords:
+
+```yaml
+ntfy_auth_users_custom:
+  - username: alice
+    password_hash: $2a$10$YLiO8U21sX1uhZamTLJXHuxgVC0Z/GKISibrKCLohPgtG7yIxSk4C
+    role: admin
+```
+
+Generate a hash for each of your passwords by running the following command on any machine which has Docker installed. It asks for the password and prints its hash:
+
+```sh
+docker run --rm -it docker.io/binwiederhier/ntfy:latest user hash
+```
+
+The playbook will let you know if your configuration still uses `ntfy_credentials`.
+
+Your existing ntfy users are left alone and keep working until you declare them again this way. Note that ntfy manages declared users and access-control entries declaratively, so removing one from your configuration later deletes it from ntfy's user database.
+
+Users with the `admin` role get access to all topics. Others start with no access at all, and can be granted access to specific topics via `ntfy_auth_access_custom`. It is also now possible to control what unauthenticated visitors may do (`ntfy_auth_default_access`) and whether users may log in at all (`ntfy_enable_login`, which follows your authentication setup by default). See the role's [documentation on access control](https://github.com/mother-of-all-self-hosting/ansible-role-ntfy/blob/main/docs/configuring-ntfy.md#enable-access-control-with-authentication-optional) for details.
+
+## Support for bridging to LinkedIn via mautrix-linkedin
+
+Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook now supports bridging to [LinkedIn](https://www.linkedin.com/) via [mautrix-linkedin](https://github.com/mautrix/linkedin).
+
+Logging in requires copying a request out of your browser's developer tools, and only works with Chrome or another Chrome-based browser. To learn more, see our [Setting up Mautrix LinkedIn bridging](./docs/configuring-playbook-bridge-mautrix-linkedin.md) documentation page.
+
+This bridge supersedes [beeper-linkedin](./docs/configuring-playbook-bridge-beeper-linkedin.md), which is now considered unmaintained (its [upstream repository](https://github.com/beeper/linkedin) has been archived). The old bridge remains installable, but you may wish to switch. Both bridges claim the same appservice namespaces, so the playbook refuses to install mautrix-linkedin while beeper-linkedin is still enabled.
+
+## Support for bridging to LINE via beeper-line
+
+Thanks to [Co van Leeuwen](https://github.com/c00), the playbook can now bridge [LINE](https://line.me/) via [beeper-line](https://github.com/beeper/line), a bridge based on the modern mautrix bridge framework. It supports LINE accounts with Letter Sealing enabled or disabled and bridges messages, media, reactions, replies, receipts, and other common chat features.
+
+The bridge identifies itself as a LINE Chrome Extension client, so it cannot be used at the same time as the real LINE Chrome Extension. See [Setting up Beeper LINE bridging](docs/configuring-playbook-bridge-beeper-line.md) to get started.
+
+
 # 2026-07-19
 
 ## Tuwunel now exposes its administration and /_tuwunel API paths

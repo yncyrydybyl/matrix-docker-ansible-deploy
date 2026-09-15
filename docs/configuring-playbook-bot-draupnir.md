@@ -16,7 +16,9 @@ See the project's [documentation](https://the-draupnir-project.github.io/draupni
 
 This documentation page is about installing Draupnir in bot mode. As an alternative, you can run a multi-instance Draupnir deployment by installing [Draupnir in appservice mode](./configuring-playbook-appservice-draupnir-for-all.md) (called Draupnir-for-all) instead.
 
-If your migrating from [Mjolnir](configuring-playbook-bot-mjolnir.md), skip to [this section](#migrating-from-mjolnir-only-required-if-migrating).
+**Note**: you can also use the [Meowlnir](configuring-playbook-bot-meowlnir.md) or [Mjolnir](configuring-playbook-bot-mjolnir.md) bots, which speak the same [policy list](https://the-draupnir-project.github.io/draupnir-documentation/concepts/policy-lists) protocol.
+
+When migrating from [Mjolnir](configuring-playbook-bot-mjolnir.md), skip to [this section](#migrating-from-mjolnir-only-required-if-migrating).
 
 ## Prerequisites
 
@@ -36,6 +38,8 @@ Using your own account, create a new invite only room that you will use to manag
 
 > [!WARNING]
 > Anyone in this room can control the bot so it is important that you only invite trusted users to this room.
+
+The bot also needs at least a Moderator power level (50) in this room. This power level is granted in a [later step](#create-and-invite-the-bot-to-the-management-room-only-when-using-native-login-without-zero-touch-deployment), after the bot gets invited to the room.
 
 It is possible to make the management room encrypted (E2EE). If doing so, then you need to enable the native E2EE support (see [below](#native-e2ee-support)).
 
@@ -132,6 +136,13 @@ ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-use
 **Note**: the `ensure-matrix-users-created` playbook tag makes the playbook automatically create the bot's user account.
 
 Then, invite the bot (`@bot.draupnir:example.com`) to its management room which you have created earlier.
+
+After the bot joins, give it at least a Moderator power level (50) in the management room.
+
+> [!WARNING]
+> Draupnir stores each protection's settings as custom state events in the management room, and sending those requires a power level of 50 by default. A bot without this power level cannot save any protection settings. The failure is easy to miss and has nasty consequences: the `PolicyChangeNotification` protection, unable to remember its notifications room, will create a brand new one on every restart of the bot (and the playbook restarts it on every installation run), littering your server with abandoned rooms.
+
+This is not a concern for Zero Touch Deployment, where the bot creates the management room itself and has full control over it.
 
 ### Creating a user account for the bot (when using Zero Touch Deployment)
 

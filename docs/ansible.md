@@ -39,6 +39,18 @@ If using the `pip` method, do note that the `ansible-playbook` binary may not be
 
 **Note**: Both of the above methods are a bad way to run system software such as Ansible. If you find yourself needing to resort to such hacks, please consider reporting a bug to your distribution and/or switching to a sane distribution, which provides up-to-date software.
 
+## SSH host key and passphrase prompts
+
+If Ansible fails with `Host key verification failed` (or a similar `Data could not be sent to remote host` error) without asking you to confirm the SSH host key of your server, you're likely on Ansible 2.21 or later.
+
+Since Ansible 2.21, forked workers call `setsid()` and thus lose the controlling terminal. SSH cannot open `/dev/tty` anymore, so it can no longer ask you to confirm an unknown host key or prompt you for the passphrase of an SSH key.
+
+To fix host key errors, connect to the server once (e.g. `ssh root@matrix.example.com`) and confirm the host key. Ansible runs after that will find it in your `known_hosts` file.
+
+If your SSH key is protected by a passphrase, load it into an [ssh-agent](https://man.openbsd.org/ssh-agent) (e.g. `ssh-add ~/.ssh/id_ed25519`), so that SSH does not need to prompt for the passphrase.
+
+**Note**: if you're [using Ansible via Docker](#using-ansible-via-docker), host keys of previously unknown hosts are accepted automatically, so only the passphrase advice above applies to you. For the agent to be reachable inside the container, share its socket by adding `--mount type=bind,src=$SSH_AUTH_SOCK,dst=/ssh-agent --env SSH_AUTH_SOCK=/ssh-agent` to `docker run`. If the key is already loaded into the agent, you do not need to mount the SSH key file into the container at all.
+
 ## Using Ansible via Docker
 
 Alternatively, you can run Ansible inside a Docker container (powered by the [ghcr.io/devture/ansible](https://github.com/devture/docker-ansible/pkgs/container/ansible) Docker image).
@@ -76,7 +88,7 @@ docker run \
 -w /work \
 --mount type=bind,src=`pwd`,dst=/work \
 --entrypoint=/bin/sh \
-ghcr.io/devture/ansible:14.0.0-r0-0
+ghcr.io/devture/ansible:14.0.0-r0-3
 ```
 
 Once you execute the above command, you'll be dropped into a `/work` directory inside a Docker container. The `/work` directory contains the playbook's code.
@@ -97,7 +109,7 @@ docker run \
 --mount type=bind,src=`pwd`,dst=/work \
 --mount type=bind,src=$HOME/.ssh/id_ed25519,dst=/root/.ssh/id_ed25519,ro \
 --entrypoint=/bin/sh \
-ghcr.io/devture/ansible:14.0.0-r0-0
+ghcr.io/devture/ansible:14.0.0-r0-3
 ```
 
 The above command tries to mount an SSH key (`$HOME/.ssh/id_ed25519`) into the container (at `/root/.ssh/id_ed25519`). If your SSH key is at a different path (not in `$HOME/.ssh/id_ed25519`), adjust that part.

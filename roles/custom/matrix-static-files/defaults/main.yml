@@ -13,7 +13,7 @@ matrix_static_files_enabled: true
 matrix_static_files_identifier: matrix-static-files
 
 # renovate: datasource=docker depName=joseluisq/static-web-server
-matrix_static_files_version: 2.43.0
+matrix_static_files_version: 2.44.0
 
 matrix_static_files_base_path: "{{ matrix_base_data_path }}/{{ 'static-files' if matrix_static_files_identifier == 'matrix-static-files' else matrix_static_files_identifier }}"
 matrix_static_files_config_path: "{{ matrix_static_files_base_path }}/config"
@@ -84,7 +84,7 @@ matrix_static_files_container_labels_well_known_matrix_endpoint_middleware_compr
 matrix_static_files_container_labels_base_domain_enabled: false
 matrix_static_files_container_labels_base_domain_traefik_hostname: ''
 matrix_static_files_container_labels_base_domain_traefik_path_prefix: /
-matrix_static_files_container_labels_base_domain_traefik_rule: "Host(`{{ matrix_static_files_container_labels_base_domain_traefik_hostname }}`){% if matrix_static_files_container_labels_base_domain_traefik_path_prefix != '/' %} && PathPrefix(`{{ matrix_static_files_container_labels_well_known_matrix_endpoint_traefik_path_prefix }}`){% endif %}"
+matrix_static_files_container_labels_base_domain_traefik_rule: "Host(`{{ matrix_static_files_container_labels_base_domain_traefik_hostname }}`){% if matrix_static_files_container_labels_base_domain_traefik_path_prefix != '/' %} && PathPrefix(`{{ matrix_static_files_container_labels_base_domain_traefik_path_prefix }}`){% endif %}"
 matrix_static_files_container_labels_base_domain_traefik_priority: 0
 matrix_static_files_container_labels_base_domain_traefik_entrypoints: "{{ matrix_static_files_container_labels_traefik_entrypoints }}"
 matrix_static_files_container_labels_base_domain_traefik_tls: "{{ matrix_static_files_container_labels_base_domain_traefik_entrypoints != 'web' }}"
@@ -201,9 +201,16 @@ matrix_static_files_file_matrix_client_property_cc_etke_ketesa_auto: {}
 matrix_static_files_file_matrix_client_property_cc_etke_ketesa_custom: {}
 
 
+# The `org.matrix.msc4143.rtc_foci` property has been dropped from MSC4143 in favor of the homeserver's own RTC transports API,
+# but remains the only way to reach clients which cannot consult that API.
+# Element Call running as a widget (which is how Element Web and Element Desktop invoke it) is one such client,
+# because a widget holds no access token of its own and the API requires authentication.
+# Newer Element Call versions ask their host client for the transports over the widget API (MSC4515) instead,
+# so this property can go away once such versions are widely deployed.
+#
 # Controls whether `org.matrix.msc4143.rtc_foci`-related entries should be added to the client well-known.
 # By default, if there are entries in `matrix_static_files_file_matrix_client_property_org_matrix_msc4143_rtc_foci`, we show them (by enabling this).
-matrix_static_files_file_matrix_client_property_org_matrix_msc4143_rtc_foci_enabled: "{{ matrix_static_files_file_matrix_client_property_org_matrix_msc4143_rtc_foci | default({}) | dict2items | length > 0 }}"
+matrix_static_files_file_matrix_client_property_org_matrix_msc4143_rtc_foci_enabled: "{{ matrix_static_files_file_matrix_client_property_org_matrix_msc4143_rtc_foci | default([]) | length > 0 }}"
 
 # Controls the org.matrix.msc4143.rtc_foci property in the /.well-known/matrix/client file.
 # See `matrix_static_files_file_matrix_client_property_org_matrix_msc4143_rtc_foci_enabled`

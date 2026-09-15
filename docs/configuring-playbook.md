@@ -148,6 +148,8 @@ Bridges can be used to connect your Matrix installation with third-party communi
 
 - [Setting up Mautrix Google Voice bridging](configuring-playbook-bridge-mautrix-gvoice.md)
 
+- [Setting up Mautrix LinkedIn bridging](configuring-playbook-bridge-mautrix-linkedin.md)
+
 - [Setting up Mautrix Whatsapp bridging](configuring-playbook-bridge-mautrix-whatsapp.md)
 
 - [Setting up Instagram bridging via Mautrix Meta](configuring-playbook-bridge-mautrix-meta-instagram.md)
@@ -170,7 +172,7 @@ Bridges can be used to connect your Matrix installation with third-party communi
 
 - [Setting up Appservice Slack bridging](configuring-playbook-bridge-appservice-slack.md)
 
-- [Setting up Beeper LinkedIn bridging](configuring-playbook-bridge-beeper-linkedin.md)
+- [Setting up Beeper LINE bridging](configuring-playbook-bridge-beeper-line.md)
 
 - [Setting up matrix-hookshot](configuring-playbook-bridge-hookshot.md) — a bridge between Matrix and multiple project management services, such as [GitHub](https://github.com), [GitLab](https://about.gitlab.com) and [JIRA](https://www.atlassian.com/software/jira).
 
@@ -207,6 +209,8 @@ Bots provide various additional functionality to your installation.
 - [Setting up Draupnir](configuring-playbook-bot-draupnir.md) — a moderation tool/bot, forked from Mjolnir and maintained by its former leader developer
 
 - [Setting up Draupnir for all/D4A](configuring-playbook-appservice-draupnir-for-all.md) — like the [Draupnir bot](configuring-playbook-bot-draupnir.md) mentioned above, but running in appservice mode and supporting multiple instances
+
+- [Setting up Meowlnir](configuring-playbook-bot-meowlnir.md) — a moderation tool/bot which speaks the same policy list protocol as Draupnir and Mjolnir, but runs in appservice mode and can override policies coming from lists you do not control
 
 - [Setting up Buscarron](configuring-playbook-bot-buscarron.md) — a bot you can use to send any form (HTTP POST, HTML) to a (encrypted) Matrix room
 
@@ -268,6 +272,8 @@ Various services that don't fit any other categories.
 - [Setting up Appservice Kakaotalk bridging](configuring-playbook-bridge-appservice-kakaotalk.md) (removed; the upstream repository has become unreachable and the component could only be installed by self-building it)
 
 - [Setting up Appservice Webhooks bridging](configuring-playbook-bridge-appservice-webhooks.md) (deprecated; the bridge's author suggests taking a look at [matrix-hookshot](https://github.com/matrix-org/matrix-hookshot) as a replacement, which can also be [installed using this playbook](configuring-playbook-bridge-hookshot.md))
+
+- [Setting up Beeper LinkedIn bridging](configuring-playbook-bridge-beeper-linkedin.md) (unmaintained; the [upstream repository](https://github.com/beeper/linkedin) has been archived. Consider [setting up Mautrix LinkedIn bridging](configuring-playbook-bridge-mautrix-linkedin.md))
 
 - [Setting up the Dimension integration manager](configuring-playbook-dimension.md) ([unmaintained](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/2806#issuecomment-1673559299); after [installing](installing.md))
 
