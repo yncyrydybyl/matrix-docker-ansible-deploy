@@ -251,6 +251,78 @@ matrix_homeserver_app_service_config_files_auto: |
     (['/matrix-steam-bridge-registration.yaml'] if matrix_bridge_steam_enabled else [])
   }}
 
+# Tells whether any appservice registration file mounted into the homeserver (see `matrix_homeserver_container_extra_arguments_auto`)
+# changed during this run, so that the homeserver is restarted to pick it up.
+# Each entry is the registered result of the task which installs that file.
+# Synapse workers read the same configuration and registration files as the main Synapse process,
+# so their entries in `devture_systemd_service_manager_services_list_auto` follow the same restart decision.
+matrix_homeserver_app_service_registration_changed: |
+  {{
+    (
+      ([matrix_bridge_appservice_discord_registration_result | default({})] if matrix_bridge_appservice_discord_enabled else [])
+      +
+      ([matrix_appservice_draupnir_for_all_registration_config_result | default({})] if matrix_appservice_draupnir_for_all_enabled else [])
+      +
+      ([matrix_bot_meowlnir_registration_result | default({})] if matrix_bot_meowlnir_enabled else [])
+      +
+      ([matrix_appservice_double_puppet_registration_result | default({})] if matrix_appservice_double_puppet_enabled else [])
+      +
+      ([matrix_bridge_appservice_irc_registration_result | default({})] if matrix_bridge_appservice_irc_enabled else [])
+      +
+      ([matrix_bridge_beeper_linkedin_registration_result | default({})] if matrix_bridge_beeper_linkedin_enabled else [])
+      +
+      ([matrix_bridge_beeper_line_registration_result | default({})] if matrix_bridge_beeper_line_enabled else [])
+      +
+      ([matrix_bridge_wechat_registration_result | default({})] if matrix_bridge_wechat_enabled else [])
+      +
+      ([matrix_bridge_heisenbridge_registration_result | default({})] if matrix_bridge_heisenbridge_enabled else [])
+      +
+      ([matrix_bridge_hookshot_registration_result | default({})] if matrix_bridge_hookshot_enabled else [])
+      +
+      ([matrix_bridge_mautrix_bluesky_registration_result | default({})] if matrix_bridge_mautrix_bluesky_enabled else [])
+      +
+      ([matrix_bridge_rustpush_registration_result | default({})] if matrix_bridge_rustpush_enabled else [])
+      +
+      ([matrix_bridge_mautrix_discord_registration_result | default({})] if matrix_bridge_mautrix_discord_enabled else [])
+      +
+      ([matrix_bridge_mautrix_slack_registration_result | default({})] if matrix_bridge_mautrix_slack_enabled else [])
+      +
+      ([matrix_bridge_mautrix_googlechat_registration_result | default({})] if matrix_bridge_mautrix_googlechat_enabled else [])
+      +
+      ([matrix_bridge_mautrix_signal_registration_result | default({})] if matrix_bridge_mautrix_signal_enabled else [])
+      +
+      ([matrix_bridge_mautrix_meta_messenger_registration_result | default({})] if matrix_bridge_mautrix_meta_messenger_enabled else [])
+      +
+      ([matrix_bridge_mautrix_meta_instagram_registration_result | default({})] if matrix_bridge_mautrix_meta_instagram_enabled else [])
+      +
+      ([matrix_bridge_mautrix_telegram_registration_result | default({})] if matrix_bridge_mautrix_telegram_enabled else [])
+      +
+      ([matrix_bridge_mautrix_twitter_registration_result | default({})] if matrix_bridge_mautrix_twitter_enabled else [])
+      +
+      ([matrix_bridge_mautrix_gmessages_registration_result | default({})] if matrix_bridge_mautrix_gmessages_enabled else [])
+      +
+      ([matrix_bridge_mautrix_gvoice_registration_result | default({})] if matrix_bridge_mautrix_gvoice_enabled else [])
+      +
+      ([matrix_bridge_mautrix_linkedin_registration_result | default({})] if matrix_bridge_mautrix_linkedin_enabled else [])
+      +
+      ([matrix_bridge_mautrix_whatsapp_registration_result | default({})] if matrix_bridge_mautrix_whatsapp_enabled else [])
+      +
+      ([matrix_bridge_mautrix_wsproxy_registration_androidsms_result | default({})] if matrix_bridge_mautrix_wsproxy_enabled else [])
+      +
+      ([matrix_bridge_mautrix_wsproxy_registration_imessage_result | default({})] if matrix_bridge_mautrix_wsproxy_enabled else [])
+      +
+      ([matrix_bridge_mx_puppet_groupme_registration_result | default({})] if matrix_bridge_mx_puppet_groupme_enabled else [])
+      +
+      ([matrix_bridge_mx_puppet_steam_registration_result | default({})] if matrix_bridge_mx_puppet_steam_enabled else [])
+      +
+      ([matrix_bridge_sms_registration_result | default({})] if matrix_bridge_sms_enabled else [])
+      +
+      ([matrix_bridge_steam_registration_result | default({})] if matrix_bridge_steam_enabled else [])
+      +
+      ([matrix_cactus_comments_config_appservice_result | default({})] if matrix_cactus_comments_enabled else [])
+    ) | selectattr('changed', 'defined') | selectattr('changed') | list | length > 0
+  }}
+
 matrix_addons_homeserver_container_network: "{{ matrix_playbook_reverse_proxy_container_network if matrix_playbook_internal_matrix_client_api_traefik_entrypoint_enabled else matrix_homeserver_container_network }}"
 matrix_addons_homeserver_client_api_url: "{{ ('http://' + matrix_playbook_reverse_proxy_hostname + ':' + matrix_playbook_internal_matrix_client_api_traefik_entrypoint_port | string) if matrix_playbook_internal_matrix_client_api_traefik_entrypoint_enabled else matrix_homeserver_container_url }}"
 matrix_addons_homeserver_systemd_services_list: |
@@ -313,10 +385,16 @@ matrix_addons_homeserver_systemd_services_list: |
 # We override it here to automatically match the intent of the playbook tags being used:
 # - install-* tags (regular upgrades): conditional restart ON — only changed services restart, reducing downtime
 # - setup-* tags (full setup/reconfiguration): conditional restart OFF — all services restart unconditionally
+# - standalone start/restart tags: conditional restart OFF — selected services restart unconditionally
 #
 # This ensures consistent behavior whether users invoke the playbook via `just` shortcuts
 # or raw `ansible-playbook --tags=...` commands.
-devture_systemd_service_manager_conditional_restart_enabled: "{{ ansible_run_tags | select('match', 'setup-') | list | length == 0 }}"
+devture_systemd_service_manager_conditional_restart_enabled: >-
+  {{
+    (ansible_run_tags | select('match', 'install-') | list | length > 0)
+    and
+    (ansible_run_tags | select('match', 'setup-') | list | length == 0)
+  }}
 
 devture_systemd_service_manager_services_list_auto: |
   {{
@@ -692,6 +770,7 @@ devture_systemd_service_manager_services_list_auto: |
         else (matrix_continuwuity_restart_necessary | bool) if matrix_homeserver_implementation == 'continuwuity'
         else (matrix_tuwunel_restart_necessary | bool) if matrix_homeserver_implementation == 'tuwunel'
         else (matrix_dendrite_restart_necessary | bool) if matrix_homeserver_implementation == 'dendrite'
+        else ((matrix_synapse_restart_necessary | bool) or (matrix_homeserver_app_service_registration_changed | bool)) if matrix_homeserver_implementation == 'synapse'
         else true
       ),
       'groups': ['matrix', 'homeservers', matrix_homeserver_implementation],
@@ -969,11 +1048,32 @@ devture_systemd_service_manager_services_list_auto: |
       'restart_necessary': (traefik_certs_dumper_restart_necessary | bool),
       'groups': ['matrix', 'traefik-certs-dumper'],
     }] if traefik_certs_dumper_enabled else [])
+    +
+    (matrix_synapse_worker_systemd_services_list | map('combine', {'restart_necessary': ((matrix_synapse_restart_necessary | bool) or (matrix_homeserver_app_service_registration_changed | bool))}) | list if matrix_synapse_enabled else [])
   }}
 
 ########################################################################
 #                                                                      #
 # /com.devture.ansible.role.systemd_service_manager                    #
+#                                                                      #
+########################################################################
+
+
+########################################################################
+#                                                                      #
+# cleanup                                                              #
+#                                                                      #
+########################################################################
+
+# All cleanup tasks are off by default. See docs/configuring-playbook-system-cleanup.md
+
+system_cleanup_identifier: matrix-system-cleanup
+
+system_cleanup_base_path: "{{ matrix_base_data_path }}/system-cleanup"
+
+########################################################################
+#                                                                      #
+# /cleanup                                                             #
 #                                                                      #
 ########################################################################
 
@@ -4117,8 +4217,9 @@ jitsi_web_stun_servers: |
     else [ 'stun:meet-jit-si-turnrelay.jitsi.net:443']
   }}
 
-# The Jitsi instance installed by this playbook is meant for embedding into Matrix clients, so framing is allowed.
-jitsi_web_framing_enabled: true
+# The Jitsi instance installed by this playbook is meant for embedding into Matrix clients, so framing is allowed from anywhere.
+# To restrict it, set this to `true` and list any additional origins in `jitsi_web_http_header_content_security_policy_frame_ancestors_custom`.
+jitsi_web_http_header_content_security_policy_frame_ancestors_enabled: false
 
 # Jitsi (Prosody) only seems to support authenticating with coturn using `auth-secret`, not `lt-cred-mech`.
 # See: https://prosody.im/doc/coturn
@@ -6466,6 +6567,18 @@ traefik_additional_entrypoints_auto: |
     ([matrix_playbook_livekit_turn_traefik_entrypoint_definition] if matrix_playbook_livekit_turn_traefik_entrypoint_enabled else [])
   }}
 
+# A TLS option for the LiveKit TURN/TLS router: Traefik's default TLS options reject the `stun.turn` ALPN protocol.
+traefik_config_tls_options_auto: |
+  {{
+    (
+      {
+        matrix_playbook_livekit_turn_traefik_tls_options_name: {
+          'alpnProtocols': matrix_playbook_livekit_turn_traefik_tls_options_alpn_protocols,
+        }
+      } if livekit_server_container_labels_turn_traefik_enabled else {}
+    )
+  }}
+
 traefik_config_providers_docker_endpoint: "{{ container_socket_proxy_endpoint if container_socket_proxy_enabled else 'unix:///var/run/docker.sock' }}"
 
 traefik_container_image_registry_prefix_upstream: "{{ matrix_container_global_registry_prefix_override if matrix_container_global_registry_prefix_override else traefik_container_image_registry_prefix_upstream_default }}"
@@ -6653,6 +6766,7 @@ livekit_server_container_labels_traefik_tls_certResolver: "{{ traefik_certResolv
 livekit_server_container_labels_turn_traefik_enabled: "{{ matrix_playbook_livekit_turn_traefik_entrypoint_enabled }}"
 livekit_server_container_labels_turn_traefik_entrypoints: "{{ matrix_playbook_livekit_turn_traefik_entrypoint_name }}"
 livekit_server_container_labels_turn_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
+livekit_server_container_labels_turn_traefik_tls_options: "{{ (matrix_playbook_livekit_turn_traefik_tls_options_name + '@file') if livekit_server_container_labels_turn_traefik_enabled else '' }}"
 
 livekit_server_container_labels_public_metrics_middleware_basic_auth_enabled: "{{ matrix_metrics_exposure_http_basic_auth_enabled }}"
 livekit_server_container_labels_public_metrics_middleware_basic_auth_users: "{{ matrix_metrics_exposure_http_basic_auth_users }}"
@@ -6672,7 +6786,8 @@ livekit_server_config_keys_auto: |-
     )
   }}
 
-# We only wish for matrix-livekit-jwt-service to create rooms, only for users on trusted homeservers.
+# Only users on trusted homeservers may publish media or trigger room creation on this SFU.
+# Other federated users subscribe here and publish on their own SFU.
 # See `matrix_livekit_jwt_service_environment_variable_livekit_full_access_homeservers`.
 #
 # Ref:

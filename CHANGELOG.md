@@ -1,3 +1,58 @@
+# 2026-10-19
+
+## `just start-all` and `just start-group` restart all targeted services again
+
+Since [conditional service restart](#conditional-service-restart-for-install--commands) was introduced, it also applied to runs with only start or restart tags. As more roles began tracking their own changes, these commands stopped restarting most services and only started those that were stopped, contrary to the [documentation](./docs/just.md#conditional-service-restart).
+
+Conditional restart now applies only when an `install-*` tag is selected and no `setup-*` tag. `just install-all` and `just install-service` are unchanged. `just start-all`, `just start-group` and other runs with only start or restart tags restart all their targeted services again, so they briefly interrupt running services. To keep the previous behavior for such a run, add `--extra-vars='devture_systemd_service_manager_conditional_restart_enabled=true'`.
+
+# 2026-10-10
+
+## Optional system cleanup, including safe removal of superseded Docker images
+
+The playbook now includes the [system cleanup](./docs/configuring-playbook-system-cleanup.md) role from [the MASH project](https://github.com/mother-of-all-self-hosting/ansible-role-cleanup). It can remove superseded Docker images and stopped containers on every playbook run, keeping the images that services you have stopped still need (unlike `docker image prune -a`, which `just run-tags run-docker-prune` uses). It can also vacuum old logs, remove arbitrary paths and, on Debian-based distributions, upgrade packages and purge old kernels.
+
+Everything is off by default. To enable the Docker cleanup, add `system_cleanup_docker: true` to your `vars.yml` file and re-run the playbook (`just setup-all`). See the [documentation](./docs/configuring-playbook-system-cleanup.md) for the other options.
+
+# 2026-09-22
+
+## LiveKit's TURN over TLS works for clients that advertise an ALPN protocol
+
+This only affects you if you have [LiveKit Server](./docs/configuring-playbook-livekit-server.md) with TURN enabled.
+
+LiveKit Server's embedded TURN server speaks TURN over TLS, and the playbook lets Traefik terminate that TLS. Traefik's default TLS options allow only `h2`, `http/1.1` and `acme-tls/1` as ALPN protocols, and Traefik aborts the handshake when the client's advertised protocols don't intersect with them. TURN clients advertising `stun.turn` (see [RFC 7443](https://datatracker.ietf.org/doc/html/rfc7443)) got a TLS alert instead of a relay.
+
+The playbook now defines a `livekit-turn` Traefik TLS option that also allows `stun.turn` and `stun.nat-discovery`, and attaches it to the LiveKit TURN/TLS router. Chrome does not advertise an ALPN protocol for TURN, so nothing changes for it.
+
+Deployments using `other-traefik-container` need to define an equivalent TLS option in their own Traefik instance and point `livekit_server_container_labels_turn_traefik_tls_options` at it. See [TURN/TLS clients advertising an ALPN protocol](./docs/configuring-playbook-livekit-server.md#turntls-clients-advertising-an-alpn-protocol) for details.
+
+Re-running the playbook (`just install-all`) regenerates the configuration and applies it.
+
+# 2026-09-19
+
+## Maubot's plugin webhooks and management interface work again
+
+Maubot v0.6.0 removed the ability to customize the paths maubot serves internally, so the playbook now strips the public path prefix (`matrix_bot_maubot_path_prefix`, `/_matrix/maubot` by default) before proxying requests to maubot, and tells it about the prefix through its `public_url` instead.
+
+Two leftovers from that rework broke things. Plugin endpoints were still configured with a fully-prefixed path, even though maubot receives paths relative to the prefix, so every plugin webhook (`https://matrix.example.com/_matrix/maubot/plugin/...`) answered `404` and maubot handed out webhook URLs with a duplicated prefix (`/_matrix/maubot/_matrix/maubot/plugin/...`). The management interface also lacked a trailing-slash redirect, and because it loads its assets relative to the URL you visit, `https://matrix.example.com/_matrix/maubot` made browsers request `/_matrix/static/...` (which Synapse serves) instead of the interface itself.
+
+Maubot is now configured with a relative plugin base path (`/plugin/`), and the management endpoint redirects the slashless prefix to its trailing-slash form. Re-running the playbook (`just install-all`) regenerates the configuration and restarts maubot.
+
+A `matrix_bot_maubot_path_prefix` ending with a slash was never supported (the role's own documentation says the prefix must be `/` or not end with a slash), and the playbook now refuses such a value with an explicit error instead of deploying a half-working setup.
+
+If you expose maubot at the root (`matrix_bot_maubot_path_prefix: /`), your plugin webhook URLs move back to `/plugin/...`, where they were before the v0.6.0 upgrade.
+
+# 2026-09-18
+
+## LiveKit JWT Service 0.7.0 and federated calls
+
+LiveKit JWT Service, part of the [Matrix RTC stack](docs/configuring-playbook-matrix-rtc.md), has been upgraded to **0.7.0**. This release fixes the image healthcheck, which the playbook enables again.
+
+The service now restricts media publishing to users from trusted homeservers (your `matrix_domain` by default). Other federated users can receive media from your SFU but publish on their own homeserver's SFU. This is an [intentional upstream change for multi-SFU calls](https://github.com/element-hq/lk-jwt-service/issues/238#issuecomment-5709655222), already supported by current Element Call in its `compatibility` mode.
+
+Older clients or callers relying on your SFU for publishing may join but be unable to unmute, enable video, or share their screen. See [Federated calls and trusted homeservers](docs/configuring-playbook-livekit-jwt-service.md#federated-calls-and-trusted-homeservers) for client requirements, granting access to trusted homeservers, and a temporary 0.6.0 pin.
+
+
 # 2026-08-20
 
 ## MatrixRTC transports are advertised in the client well-known again

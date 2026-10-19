@@ -14,7 +14,7 @@ matrix_continuwuity_enabled: true
 matrix_continuwuity_hostname: ''
 
 # renovate: datasource=docker depName=forgejo.ellis.link/continuwuation/continuwuity
-matrix_continuwuity_version: v26.8.1
+matrix_continuwuity_version: v26.9.1
 
 matrix_continuwuity_container_image: "{{ matrix_continuwuity_container_image_registry_prefix }}/continuwuation/continuwuity:{{ matrix_continuwuity_container_image_tag }}"
 matrix_continuwuity_container_image_tag: "{{ matrix_continuwuity_version }}"
@@ -132,6 +132,34 @@ matrix_continuwuity_container_labels_additional_labels: ''
 # Extra arguments for the Docker container
 matrix_continuwuity_container_extra_arguments: []
 
+# Controls how long the pre-start cleanup should wait for stale container-name release
+# before failing startup explicitly.
+matrix_continuwuity_container_cleanup_timeout_seconds: "{{ devture_systemd_docker_base_container_cleanup_timeout_seconds }}"
+
+# Controls the delay between pre-start cleanup retries.
+matrix_continuwuity_container_cleanup_retry_delay_seconds: "{{ devture_systemd_docker_base_container_cleanup_retry_delay_seconds }}"
+
+# Shell command used in the systemd pre-start phase to deterministically remove a stale
+# container and wait until Docker releases its name.
+matrix_continuwuity_container_cleanup_command: |
+  i=0;
+  while [ "$i" -lt {{ matrix_continuwuity_container_cleanup_timeout_seconds }} ]; do
+  {{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} matrix-continuwuity >/dev/null 2>&1 || true;
+  {{ devture_systemd_docker_base_host_command_docker }} rm -f matrix-continuwuity >/dev/null 2>&1 || true;
+  if {{ devture_systemd_docker_base_host_command_docker }} container inspect matrix-continuwuity >/dev/null 2>&1; then
+  i=$((i + 1));
+  sleep {{ matrix_continuwuity_container_cleanup_retry_delay_seconds }};
+  continue;
+  fi;
+  if {{ devture_systemd_docker_base_host_command_docker }} info >/dev/null 2>&1; then
+  exit 0;
+  fi;
+  echo "Failed to query Docker daemon while cleaning up matrix-continuwuity" >&2;
+  exit 1;
+  done;
+  echo "Failed to remove stale container matrix-continuwuity after {{ matrix_continuwuity_container_cleanup_timeout_seconds }} attempts" >&2;
+  exit 1
+
 # Specifies which template files to use when configuring continuwuity.
 # If you'd like to have your own different configuration, feel free to copy and paste
 # the original files into your inventory (e.g. in `inventory/host_vars/matrix.example.com/`)
@@ -151,16 +179,8 @@ matrix_continuwuity_config_allow_registration: false
 # Controls if newly registered users are automatically suspended, requiring admin approval.
 matrix_continuwuity_config_suspend_on_register: false
 
-# Controls the `yes_i_am_very_very_sure_i_want_an_open_registration_server_prone_to_abuse` setting.
-# This is only used when `matrix_continuwuity_config_allow_registration` is set to true and no registration token is configured.
-matrix_continuwuity_config_yes_i_am_very_very_sure_i_want_an_open_registration_server_prone_to_abuse: false
-
 # Controls the `registration_token` setting.
-# When registration is enabled (`matrix_continuwuity_config_allow_registration`) you:
-# - either need to set a token to protect registration from abuse
-# - or you need to enable the `yes_i_am_very_very_sure_i_want_an_open_registration_server_prone_to_abuse` setting
-#   (see `matrix_continuwuity_config_yes_i_am_very_very_sure_i_want_an_open_registration_server_prone_to_abuse`),
-#   to allow registration without any form of 2nd-step.
+# When registration is enabled, protect it with a registration token, ReCAPTCHA, or required email verification.
 matrix_continuwuity_config_registration_token: ''
 
 # Controls the `new_user_displayname_suffix` setting.
