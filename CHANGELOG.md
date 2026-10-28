@@ -1,3 +1,13 @@
+# 2026-10-28
+
+## Support for Element Web modules
+
+Element Web can load [modules](https://github.com/element-hq/element-web/blob/develop/docs/config.md#modules) at runtime: JavaScript files that add features without a custom Element Web build. Until now, loading one took a hand-written bind mount (`matrix_client_element_container_extra_arguments`), a way to copy the files to the server and a `modules` entry in `matrix_client_element_configuration_extension_json`.
+
+The playbook now does this for you. List your modules in `matrix_client_element_modules`, either as a local directory (`src`), which the playbook copies to the server and serves from Element Web's own container, or as a URL. Module URLs include a hash of the module, so browsers pick up new versions right away. See [Loading Element Web modules](./docs/configuring-playbook-client-element-web.md#loading-element-web-modules) for details.
+
+If you already load modules with your own mount and configuration, you can keep doing so, or move them to `matrix_client_element_modules`. Nothing changes unless you use the new variable.
+
 # 2026-10-19
 
 ## `just start-all` and `just start-group` restart all targeted services again

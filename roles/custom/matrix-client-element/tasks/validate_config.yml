@@ -53,6 +53,35 @@
     - matrix_client_element_location_sharing_enabled | bool
     - matrix_client_element_location_sharing_map_style_content_sources_localsource_tiles | length == 0
 
+- name: Fail if an Element Web module is misconfigured
+  ansible.builtin.fail:
+    msg: >-
+      Each entry in matrix_client_element_modules needs a `name` (lowercase letters, digits, `.`, `_` and `-`)
+      and exactly one of `src` (a directory on the Ansible controller) or `url`.
+      This entry is invalid: {{ item }}
+  loop: "{{ matrix_client_element_modules }}"
+  when: >-
+    item.name is not defined
+    or item.name is not match('^[a-z0-9][a-z0-9._-]*$')
+    or (item.src is defined) == (item.url is defined)
+
+- name: Fail if an Element Web module's files are missing
+  ansible.builtin.fail:
+    msg: >-
+      Element Web module `{{ item.name }}`: `{{ item.src }}/{{ item.entry | default('index.js') }}` does not exist on the Ansible controller.
+      Point `src` at the directory holding the built module, or set `entry` to the file Element Web should load.
+  loop: "{{ matrix_client_element_modules | selectattr('src', 'defined') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: "(item.src ~ '/' ~ item.entry | default('index.js')) is not file"
+
+- name: Fail if Element Web module names are not unique
+  ansible.builtin.fail:
+    msg: >-
+      Each entry in matrix_client_element_modules needs a unique `name`.
+      Configured names: {{ matrix_client_element_modules | map(attribute='name') | join(', ') }}
+  when: "(matrix_client_element_modules | map(attribute='name') | unique | length) != (matrix_client_element_modules | length)"
+
 - name: (Deprecation) Catch and report riot-web variables
   ansible.builtin.fail:
     msg: >-

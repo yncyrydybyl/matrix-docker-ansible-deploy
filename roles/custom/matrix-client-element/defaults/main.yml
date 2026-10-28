@@ -329,6 +329,61 @@ matrix_client_element_default_theme: 'light'
 # Note that for a custom theme to work well, all Element Web instances that you use must have the same theme installed.
 matrix_client_element_setting_defaults_custom_themes: []  # noqa var-naming
 
+# A list of Element Web modules to load.
+# See https://github.com/element-hq/element-web/blob/develop/docs/config.md#modules
+# and `docs/configuring-playbook-client-element-web.md` for details.
+#
+# Each entry is a dictionary with these keys:
+# - `name`: a unique name for the module (lowercase letters, digits, `.`, `_` and `-`)
+# - `src`: a directory on the Ansible controller holding the built module. Its contents get copied to
+#   `matrix_client_element_modules_path/<name>/` and are served at `<path prefix>element-modules/<name>/`.
+# - `entry` (optional, default: `index.js`): the file in `src` that Element Web loads.
+# - `url` (instead of `src`): the URL of a module hosted elsewhere. Nothing is copied.
+# - `config` (optional): a dictionary that gets merged into the Element Web configuration,
+#   for the module's own settings.
+#
+# The URL of each local module carries a hash of its entry file (`?v=<hash>`),
+# so browsers load the new version as soon as the module changes.
+#
+# Example:
+# matrix_client_element_modules:
+#   - name: my-module
+#     src: "{{ inventory_dir }}/files/element-modules/my-module/lib"
+#     config:
+#       com.example.my_module:
+#         some_setting: true
+#   - name: remote-example
+#     url: "https://modules.example.com/remote-example/index.js"
+matrix_client_element_modules: []
+
+# The directory on the server holding the files of local modules (those with `src`).
+matrix_client_element_modules_path: "{{ matrix_client_element_data_path }}/modules"
+
+# The URL path under which local modules are served (relative to `matrix_client_element_path_prefix`).
+matrix_client_element_modules_url_path: element-modules
+
+matrix_client_element_modules_local: "{{ matrix_client_element_modules | selectattr('src', 'defined') | list }}"
+
+matrix_client_element_modules_urls: |-
+  {% set ns = namespace(urls=[]) %}
+  {% for module in matrix_client_element_modules %}
+  {% if module.src is defined %}
+  {% set entry = module.entry | default('index.js') %}
+  {% set version = (lookup('ansible.builtin.file', module.src ~ '/' ~ entry, rstrip=False) | hash('sha1'))[:12] %}
+  {% set ns.urls = ns.urls + [matrix_client_element_path_prefix | regex_replace('/$', '') ~ '/' ~ matrix_client_element_modules_url_path ~ '/' ~ module.name ~ '/' ~ entry ~ '?v=' ~ version] %}
+  {% else %}
+  {% set ns.urls = ns.urls + [module.url] %}
+  {% endif %}
+  {% endfor %}
+  {{ ns.urls }}
+
+matrix_client_element_modules_configuration: |-
+  {% set ns = namespace(config={}) %}
+  {% for module in matrix_client_element_modules %}
+  {% set ns.config = ns.config | combine(module.config | default({}), recursive=True) %}
+  {% endfor %}
+  {{ ns.config }}
+
 # Default Element Web configuration template which covers the generic use case.
 # You can customize it by controlling the various variables inside it.
 #
@@ -360,7 +415,8 @@ matrix_client_element_configuration_extension: "{{ matrix_client_element_configu
 
 # Holds the final Element Web configuration (a combination of the default and its extension).
 # You most likely don't need to touch this variable. Instead, see `matrix_client_element_configuration_default`.
-matrix_client_element_configuration: "{{ matrix_client_element_configuration_default | combine(matrix_client_element_configuration_extension, recursive=True) }}"
+# Module configuration (`matrix_client_element_modules`) is merged in between the two.
+matrix_client_element_configuration: "{{ matrix_client_element_configuration_default | combine(matrix_client_element_modules_configuration, recursive=True) | combine(matrix_client_element_configuration_extension, recursive=True) }}"
 
 # Element Location sharing functionality
 # More info: https://element.io/blog/element-launches-e2ee-location-sharing/

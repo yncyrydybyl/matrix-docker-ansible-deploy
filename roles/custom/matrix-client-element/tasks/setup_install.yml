@@ -116,6 +116,51 @@
   when: "item.src is not none"
   register: matrix_client_element_support_files_result
 
+- name: Ensure Element Web modules path exists
+  ansible.builtin.file:
+    path: "{{ matrix_client_element_modules_path }}"
+    state: directory
+    mode: '0750'
+    owner: "{{ matrix_user_name }}"
+    group: "{{ matrix_group_name }}"
+  when: "matrix_client_element_modules_local | length > 0"
+
+- name: Ensure Element Web modules installed
+  ansible.builtin.copy:
+    src: "{{ item.src | regex_replace('/$', '') }}/"
+    dest: "{{ matrix_client_element_modules_path }}/{{ item.name }}/"
+    directory_mode: '0750'
+    mode: '0644'
+    owner: "{{ matrix_user_name }}"
+    group: "{{ matrix_group_name }}"
+  loop: "{{ matrix_client_element_modules_local }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Find installed Element Web modules
+  ansible.builtin.find:
+    paths: "{{ matrix_client_element_modules_path }}"
+    file_type: directory
+  register: matrix_client_element_modules_installed_result
+  when: "matrix_client_element_modules_local | length > 0"
+
+# Modules are served straight from the bind mount, so module files can change without a restart.
+# Element Web learns about new or changed modules from its configuration (the URL hash changes), and that does trigger a restart.
+- name: Ensure removed Element Web modules are deleted
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ matrix_client_element_modules_installed_result.files | default([]) }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when: "item.path | basename not in (matrix_client_element_modules_local | map(attribute='name'))"
+
+- name: Ensure Element Web modules path is removed when no local modules are configured
+  ansible.builtin.file:
+    path: "{{ matrix_client_element_modules_path }}"
+    state: absent
+  when: "matrix_client_element_modules_local | length == 0"
+
 - name: Ensure Element Web nginx.conf file is removed
   ansible.builtin.file:
     path: "{{ matrix_client_element_data_path }}/nginx.conf"
