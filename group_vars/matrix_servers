@@ -4111,6 +4111,7 @@ etherpad_systemd_required_services_list_auto: |
     ([postgres_identifier ~ '.service'] if postgres_enabled else [])
   }}
 
+etherpad_database_type: postgres
 etherpad_database_postgres_hostname: "{{ postgres_connection_hostname if postgres_enabled else '' }}"
 etherpad_database_name: matrix_etherpad
 etherpad_database_postgres_username: matrix_etherpad
@@ -5375,8 +5376,6 @@ matrix_synapse_delayed_events_enabled: "{{ matrix_rtc_enabled }}"
 
 matrix_synapse_matrix_rtc_transports_livekit_url: "{{ matrix_livekit_jwt_service_public_url if matrix_livekit_jwt_service_enabled else '' }}"
 
-matrix_synapse_experimental_features_msc4222_enabled: "{{ matrix_rtc_enabled }}"
-
 matrix_synapse_experimental_features_msc4354_enabled: "{{ matrix_rtc_enabled }}"
 
 # Disable password authentication when delegating authentication to Matrix Authentication Service.
@@ -5726,12 +5725,12 @@ prometheus_node_exporter_container_network: "{{ matrix_monitoring_container_netw
 
 prometheus_node_exporter_container_additional_networks_auto: "{{ [matrix_playbook_reverse_proxyable_services_additional_network] if matrix_playbook_reverse_proxyable_services_additional_network else [] }}"
 
-prometheus_node_exporter_container_labels_metrics_enabled: "{{ matrix_metrics_exposure_enabled }}"
-prometheus_node_exporter_container_labels_metrics_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
-prometheus_node_exporter_container_labels_metrics_entrypoints: "{{ traefik_entrypoint_primary }}"
-prometheus_node_exporter_container_labels_metrics_tls_certResolver: "{{ traefik_certResolver_primary }}"
-prometheus_node_exporter_container_labels_metrics_middleware_basic_auth_enabled: "{{ matrix_metrics_exposure_http_basic_auth_enabled }}"
-prometheus_node_exporter_container_labels_metrics_middleware_basic_auth_users: "{{ matrix_metrics_exposure_http_basic_auth_users }}"
+prometheus_node_exporter_container_labels_traefik_metrics_enabled: "{{ matrix_metrics_exposure_enabled }}"
+prometheus_node_exporter_container_labels_traefik_metrics_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
+prometheus_node_exporter_container_labels_traefik_metrics_entrypoints: "{{ traefik_entrypoint_primary }}"
+prometheus_node_exporter_container_labels_traefik_metrics_tls_certResolver: "{{ traefik_certResolver_primary }}"
+prometheus_node_exporter_container_labels_traefik_metrics_middleware_basic_auth_enabled: "{{ matrix_metrics_exposure_http_basic_auth_enabled }}"
+prometheus_node_exporter_container_labels_traefik_metrics_middleware_basic_auth_users: "{{ matrix_metrics_exposure_http_basic_auth_users }}"
 
 ######################################################################
 #
@@ -5765,15 +5764,15 @@ prometheus_postgres_exporter_container_additional_networks: |
   {{
     ([postgres_container_network] if (postgres_enabled and prometheus_postgres_exporter_database_hostname == postgres_connection_hostname and prometheus_postgres_exporter_container_network != postgres_container_network) else [])
     +
-    ([matrix_playbook_reverse_proxyable_services_additional_network] if matrix_playbook_reverse_proxyable_services_additional_network and prometheus_postgres_exporter_container_labels_metrics_enabled else [])
+    ([matrix_playbook_reverse_proxyable_services_additional_network] if matrix_playbook_reverse_proxyable_services_additional_network and prometheus_postgres_exporter_container_labels_traefik_metrics_enabled else [])
   }}
 
-prometheus_postgres_exporter_container_labels_metrics_enabled: "{{ matrix_metrics_exposure_enabled }}"
-prometheus_postgres_exporter_container_labels_metrics_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
-prometheus_postgres_exporter_container_labels_metrics_entrypoints: "{{ traefik_entrypoint_primary }}"
-prometheus_postgres_exporter_container_labels_metrics_tls_certResolver: "{{ traefik_certResolver_primary }}"
-prometheus_postgres_exporter_container_labels_metrics_middleware_basic_auth_enabled: "{{ matrix_metrics_exposure_http_basic_auth_enabled }}"
-prometheus_postgres_exporter_container_labels_metrics_middleware_basic_auth_users: "{{ matrix_metrics_exposure_http_basic_auth_users }}"
+prometheus_postgres_exporter_container_labels_traefik_metrics_enabled: "{{ matrix_metrics_exposure_enabled }}"
+prometheus_postgres_exporter_container_labels_traefik_metrics_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
+prometheus_postgres_exporter_container_labels_traefik_metrics_entrypoints: "{{ traefik_entrypoint_primary }}"
+prometheus_postgres_exporter_container_labels_traefik_metrics_tls_certResolver: "{{ traefik_certResolver_primary }}"
+prometheus_postgres_exporter_container_labels_traefik_metrics_middleware_basic_auth_enabled: "{{ matrix_metrics_exposure_http_basic_auth_enabled }}"
+prometheus_postgres_exporter_container_labels_traefik_metrics_middleware_basic_auth_users: "{{ matrix_metrics_exposure_http_basic_auth_users }}"
 
 prometheus_postgres_exporter_database_hostname: "{{ postgres_connection_hostname if postgres_enabled else '' }}"
 prometheus_postgres_exporter_database_username: matrix_prometheus_postgres_exporter
@@ -5815,15 +5814,15 @@ prometheus_nginxlog_exporter_container_network_deletion_enabled: false
 
 prometheus_nginxlog_exporter_container_additional_networks_auto: |-
   {{
-    ([matrix_playbook_reverse_proxyable_services_additional_network] if (matrix_playbook_reverse_proxyable_services_additional_network and prometheus_nginxlog_exporter_container_labels_metrics_enabled) else [])
+    ([matrix_playbook_reverse_proxyable_services_additional_network] if (matrix_playbook_reverse_proxyable_services_additional_network and prometheus_nginxlog_exporter_container_labels_traefik_metrics_enabled) else [])
   }}
 
-prometheus_nginxlog_exporter_container_labels_metrics_enabled: "{{ matrix_metrics_exposure_enabled }}"
-prometheus_nginxlog_exporter_container_labels_metrics_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
-prometheus_nginxlog_exporter_container_labels_metrics_entrypoints: "{{ traefik_entrypoint_primary }}"
-prometheus_nginxlog_exporter_container_labels_metrics_tls_certResolver: "{{ traefik_certResolver_primary }}"
-prometheus_nginxlog_exporter_container_labels_metrics_middleware_basic_auth_enabled: "{{ matrix_metrics_exposure_http_basic_auth_enabled }}"
-prometheus_nginxlog_exporter_container_labels_metrics_middleware_basic_auth_users: "{{ matrix_metrics_exposure_http_basic_auth_users }}"
+prometheus_nginxlog_exporter_container_labels_traefik_metrics_enabled: "{{ matrix_metrics_exposure_enabled }}"
+prometheus_nginxlog_exporter_container_labels_traefik_metrics_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
+prometheus_nginxlog_exporter_container_labels_traefik_metrics_entrypoints: "{{ traefik_entrypoint_primary }}"
+prometheus_nginxlog_exporter_container_labels_traefik_metrics_tls_certResolver: "{{ traefik_certResolver_primary }}"
+prometheus_nginxlog_exporter_container_labels_traefik_metrics_middleware_basic_auth_enabled: "{{ matrix_metrics_exposure_http_basic_auth_enabled }}"
+prometheus_nginxlog_exporter_container_labels_traefik_metrics_middleware_basic_auth_users: "{{ matrix_metrics_exposure_http_basic_auth_users }}"
 
 prometheus_nginxlog_exporter_config_namespaces_source_tags_auto: |
   {{

@@ -12,6 +12,9 @@ mise_data_dir := env("MISE_DATA_DIR", justfile_directory() / "var/mise")
 mise_trusted_config_paths := justfile_directory() / "mise.toml"
 prek_home := env("PREK_HOME", justfile_directory() / "var/prek")
 
+# Versions and checksums of the roles installed into roles/galaxy, for detecting local changes to them
+installed_roles_file_path := justfile_directory() / "run/installed-roles.yml"
+
 # Shows help
 default:
     @{{ just_executable() }} --list --justfile "{{ justfile() }}"
@@ -20,29 +23,32 @@ default:
 add-inventory-host domain server_address:
     @{{ justfile_directory() }}/bin/add-inventory-host.sh {{ quote(domain) }} {{ quote(server_address) }}
 
-# Pulls external Ansible roles
-roles:
-    #!/usr/bin/env sh
-    echo "[NOTE] This command just updates the roles, but if you want to update everything at once (playbook, roles, etc.) - use 'just update'"
-    if [ -x "$(command -v agru)" ]; then
-        agru -p roles/galaxy/ -no-tui
-    else
-        rm -rf roles/galaxy
-        ansible-galaxy install -r requirements.yml -p roles/galaxy/ --force
-    fi
+# Pulls external Ansible roles (--force also replaces roles with local changes)
+roles *flags:
+    @echo "[NOTE] This command just updates the roles, but if you want to update everything at once (playbook, roles, etc.) - use 'just update'"
+    @{{ just_executable() }} --justfile "{{ justfile() }}" _install-roles {{ flags }}
 
 # Updates the playbook and installs the necessary Ansible roles pinned in requirements.yml. If a -u flag is passed, also updates the requirements.yml file with new role versions (if available)
-update *flags: update-playbook-only
+update *flags:
     #!/usr/bin/env sh
-    if [ -x "$(command -v agru)" ]; then
-        echo {{ if flags == "" { "Installing roles pinned in requirements.yml…" } else if flags == "-u" { "Updating roles and pinning new versions in requirements.yml…" } else { "Unknown flags passed" } }}
-        agru -p roles/galaxy/ -no-tui {{ flags }}
-    else
-        echo "[NOTE] You are using the standard ansible-galaxy tool to install roles, which is slow and lacks other features. We recommend installing the 'agru' tool to speed up the process: https://github.com/etkecc/agru#where-to-get"
-        echo "Installing roles…"
-        rm -rf roles/galaxy
-        ansible-galaxy install -r requirements.yml -p roles/galaxy/ --force
+    set -eu
+    if [ -n "{{ flags }}" ] && [ "{{ flags }}" != "-u" ]; then
+        echo "Unknown flags passed: {{ flags }}" >&2
+        exit 1
     fi
+    if [ "{{ flags }}" = "-u" ] && ! [ -x "$(command -v agru)" ]; then
+        echo "Updating role versions (-u) requires the agru tool: https://github.com/etkecc/agru#where-to-get" >&2
+        exit 1
+    fi
+
+    {{ just_executable() }} --justfile "{{ justfile() }}" update-playbook-only
+
+    if [ "{{ flags }}" = "-u" ]; then
+        # Only updates the versions pinned in requirements.yml. The roles are installed below.
+        echo "Pinning new role versions in requirements.yml…"
+        agru -p roles/galaxy/ -no-tui -i=false -u
+    fi
+    {{ just_executable() }} --justfile "{{ justfile() }}" _install-roles
 
 # Updates the playbook without installing/updating Ansible roles
 update-playbook-only:
@@ -113,7 +119,7 @@ install-service service *extra_args:
 setup-all *extra_args: (run-tags "setup-all,ensure-matrix-users-created,start" extra_args)
 
 # Runs the playbook with the given list of arguments
-run +extra_args:
+run +extra_args: (_install-roles "--quiet")
     ansible-playbook -i {{ inventory }} setup.yml {{ extra_args }}
 
 # Runs the playbook with the given list of comma-separated tags and optional arguments
@@ -121,7 +127,7 @@ run-tags tags *extra_args:
     {{ just_executable() }} --justfile "{{ justfile() }}" run --tags={{ tags }} {{ extra_args }}
 
 # Runs the playbook in user-registration mode
-register-user username password admin_yes_or_no *extra_args:
+register-user username password admin_yes_or_no *extra_args: (_install-roles "--quiet")
     ansible-playbook -i {{ inventory }} setup.yml --tags=register-user --extra-vars="username={{ username }} password={{ password }} admin={{ admin_yes_or_no }}" {{ extra_args }}
 
 # Starts all services
@@ -145,6 +151,14 @@ molecule *args:
 # Removes the Molecule virtualenv and per-role Ansible homes from var/
 molecule-clean *args:
     @{{ justfile_directory() }}/bin/molecule-clean.sh {{ args }}
+
+# Internal - installs the roles in requirements.yml, keeping roles with local changes
+_install-roles *flags:
+    @{{ justfile_directory() }}/bin/ansible-python.sh {{ justfile_directory() }}/bin/install-roles.py \
+    --requirements-path={{ justfile_directory() }}/requirements.yml \
+    --roles-path={{ justfile_directory() }}/roles/galaxy \
+    --state-path={{ quote(installed_roles_file_path) }} \
+    {{ flags }}
 
 # Internal - ensures var/mise and var/prek directories exist
 _ensure_mise_data_directory:
