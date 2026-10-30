@@ -176,6 +176,62 @@
         fail_msg: "The configuration extension was not merged under the expected keys"
         success_msg: "The configuration extension was merged structurally"
 
+    # The role names local module URLs after the entry file's SHA-1, so a new build
+    # gets a new URL. Hash the fixture independently of the role's own lookup.
+    - name: Hash the local module's entry file on the controller
+      ansible.builtin.stat:
+        path: "{{ matrix_client_element_modules[0].src }}/index.js"
+        checksum_algorithm: sha1
+      delegate_to: localhost
+      become: false
+      register: matrix_client_element_module_entry_stat
+
+    - name: Assert the configuration lists the modules and carries their config
+      ansible.builtin.assert:
+        that:
+          - matrix_client_element_rendered_config.modules == [matrix_client_element_module_expected_url, '/molecule-proxied/index.js']
+          - matrix_client_element_rendered_config.molecule_module.marker == 'module-config-reached'
+          # The module config is merged alongside the extension, not instead of it.
+          - matrix_client_element_rendered_config.molecule_extension.marker == 'element-config-extension'
+        fail_msg: >-
+          The rendered modules are {{ matrix_client_element_rendered_config.modules | default('missing') }},
+          expected [{{ matrix_client_element_module_expected_url }}, /molecule-proxied/index.js]
+        success_msg: "The configuration lists the modules with a content-hashed URL and carries their config"
+      vars:
+        matrix_client_element_module_expected_url: >-
+          {{ matrix_client_element_path_prefix }}/element-modules/molecule-module/index.js?v={{ matrix_client_element_module_entry_stat.stat.checksum[:12] }}
+
+    # Traefik strips the path prefix in a real deployment, so the container serves
+    # the module below its own root.
+    - name: Fetch the local module from Element Web
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --network={{ matrix_client_element_container_network }}
+          - "{{ molecule_shared_image_curl }}"
+          - --silent
+          - --show-error
+          - --write-out
+          - "\nHTTP_STATUS=%{http_code} CONTENT_TYPE=%{content_type}"
+          - "http://matrix-client-element:{{ matrix_client_element_container_port }}/element-modules/molecule-module/index.js"
+      register: matrix_client_element_module_response
+      changed_when: false
+      failed_when: false
+
+    - name: Assert Element Web serves the local module as JavaScript
+      ansible.builtin.assert:
+        that:
+          - "'HTTP_STATUS=200' in matrix_client_element_module_response.stdout"
+          # nginx's mime.types maps .js to application/javascript or, in newer releases, text/javascript.
+          - matrix_client_element_module_response.stdout is search('CONTENT_TYPE=(application|text)/javascript')
+          - "'molecule-element-module' in matrix_client_element_module_response.stdout"
+        fail_msg: >-
+          Element Web did not serve the local module
+          ({{ matrix_client_element_module_response.stdout | default('no output') }})
+        success_msg: "Element Web serves the local module as JavaScript"
+
     - name: Read the environment file the role rendered
       ansible.builtin.slurp:
         src: "{{ matrix_client_element_data_path }}/env"
@@ -265,6 +321,20 @@
           - matrix_client_element_container.Config.Labels['molecule.scenario'] == 'matrix-client-element'
         fail_msg: "The running container does not carry the labels the role rendered"
         success_msg: "The running container carries the labels the role rendered"
+
+    - name: Assert the modules directory is mounted read-only
+      ansible.builtin.assert:
+        that:
+          - matrix_client_element_module_mounts | length == 1
+          - matrix_client_element_module_mounts[0].RW == false
+        fail_msg: "The running container does not mount the modules directory read-only at /app/element-modules"
+        success_msg: "The modules directory is mounted read-only at /app/element-modules"
+      vars:
+        matrix_client_element_module_mounts: >-
+          {{ matrix_client_element_container.Mounts
+             | selectattr('Source', 'equalto', matrix_client_element_modules_path)
+             | selectattr('Destination', 'equalto', '/app/element-modules')
+             | list }}
 
     - name: Assert the running container uses the exact image and version the role pins
       ansible.builtin.assert:

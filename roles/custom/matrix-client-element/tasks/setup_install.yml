@@ -83,6 +83,30 @@
   changed_when: true
   when: matrix_client_element_container_image_self_build | bool
 
+# Module files go in before config.json references them.
+# Files of modules that were removed from the list stay on the server: the running container may still
+# serve a config.json that loads them until it restarts, and a missing module stops Element Web from loading.
+- name: Ensure Element Web modules path exists
+  ansible.builtin.file:
+    path: "{{ matrix_client_element_modules_path }}"
+    state: directory
+    mode: '0750'
+    owner: "{{ matrix_user_name }}"
+    group: "{{ matrix_group_name }}"
+  when: "matrix_client_element_modules_local | length > 0"
+
+- name: Ensure Element Web modules installed
+  ansible.builtin.copy:
+    src: "{{ item.src | regex_replace('/$', '') }}/"
+    dest: "{{ matrix_client_element_modules_path }}/{{ item.name }}/"
+    directory_mode: '0750'
+    mode: '0644'
+    owner: "{{ matrix_user_name }}"
+    group: "{{ matrix_group_name }}"
+  loop: "{{ matrix_client_element_modules_local }}"
+  loop_control:
+    label: "{{ item.name }}"
+
 - name: Ensure Element Web configuration installed
   ansible.builtin.copy:
     content: "{{ matrix_client_element_configuration | to_nice_json }}"

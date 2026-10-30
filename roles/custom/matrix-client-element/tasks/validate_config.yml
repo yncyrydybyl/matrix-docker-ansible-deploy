@@ -53,6 +53,53 @@
     - matrix_client_element_location_sharing_enabled | bool
     - matrix_client_element_location_sharing_map_style_content_sources_localsource_tiles | length == 0
 
+- name: Fail if an Element Web module is misconfigured
+  ansible.builtin.fail:
+    msg: >-
+      Each entry in matrix_client_element_modules needs a `name` (lowercase letters, digits, `.`, `_` and `-`)
+      and exactly one of `src` (the absolute path of a directory on the Ansible controller)
+      or `url` (a path on Element Web's own host, starting with `/`).
+      `entry` must be a relative path without `..`, and `config` a dictionary.
+      This entry is invalid: {{ item }}
+  loop: "{{ matrix_client_element_modules }}"
+  when: >-
+    item is not mapping
+    or item.name is not defined
+    or item.name is not string
+    or item.name is not match('^[a-z0-9][a-z0-9._-]*$')
+    or (item.src is defined) == (item.url is defined)
+    or (item.src is defined and (item.src is not string or item.src is not abs))
+    or (item.url is defined and (item.url is not string or item.url is not match('^/[^/]')))
+    or (item.entry is defined and (item.entry is not string or item.entry is not match('^[A-Za-z0-9_-][A-Za-z0-9._/-]*$') or '..' in item.entry.split('/')))
+    or (item.config is defined and item.config is not mapping)
+
+- name: Fail if an Element Web module's files are missing
+  ansible.builtin.fail:
+    msg: >-
+      Element Web module `{{ item.name }}`: `{{ item.src }}/{{ item.entry | default('index.js') }}` does not exist on the Ansible controller.
+      Point `src` at the directory holding the built module, or set `entry` to the file Element Web should load.
+  loop: "{{ matrix_client_element_modules | selectattr('src', 'defined') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: "(item.src ~ '/' ~ item.entry | default('index.js')) is not file"
+
+- name: Fail if matrix_client_element_modules_url_path is invalid
+  ansible.builtin.fail:
+    msg: >-
+      matrix_client_element_modules_url_path (`{{ matrix_client_element_modules_url_path }}`) must be a single path segment
+      (lowercase letters, digits, `.`, `_` and `-`) that doesn't start with `modules` or `config`,
+      because the Element Web image's nginx serves those paths from elsewhere.
+  when:
+    - matrix_client_element_modules_local | length > 0
+    - matrix_client_element_modules_url_path is not match('^[a-z0-9][a-z0-9._-]*$') or matrix_client_element_modules_url_path is match('^(modules|config)')
+
+- name: Fail if Element Web module names are not unique
+  ansible.builtin.fail:
+    msg: >-
+      Each entry in matrix_client_element_modules needs a unique `name`.
+      Configured names: {{ matrix_client_element_modules | map(attribute='name') | join(', ') }}
+  when: "(matrix_client_element_modules | map(attribute='name') | unique | length) != (matrix_client_element_modules | length)"
+
 - name: (Deprecation) Catch and report riot-web variables
   ansible.builtin.fail:
     msg: >-

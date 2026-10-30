@@ -111,6 +111,19 @@ provisioner:
             }
           }
 
+        # One local module (copied, mounted and served by the container) and one that
+        # something else serves on Element's host. The module config is merged into
+        # config.json next to the configuration extension above.
+        matrix_client_element_modules:
+          - name: molecule-module
+            src: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/molecule/default/files/element-modules/molecule-module"
+            config:
+              molecule_module:
+                marker: module-config-reached
+          - name: molecule-proxied
+            url: /molecule-proxied/index.js
+        matrix_client_element_modules_path: /matrix/client-element/modules
+
         matrix_client_element_environment_variables_extension: |
           MOLECULE_ELEMENT_MARKER=environment-reached
   env:
