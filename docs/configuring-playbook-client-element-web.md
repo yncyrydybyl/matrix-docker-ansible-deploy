@@ -138,18 +138,22 @@ matrix_client_element_modules:
       com.example.my_module:
         some_setting: true
 
-  # A module hosted elsewhere. Nothing gets copied.
-  - name: hosted-example
-    url: "https://modules.example.com/hosted-example/index.js"
+  # A module that something else serves on Element Web's own host (e.g. your reverse proxy).
+  # Nothing gets copied.
+  - name: proxied-example
+    url: "/custom-modules/proxied-example/index.js"
 ```
 
-`src` must hold the built module (usually the `lib/` or `dist/` directory of the module's repository), not its source code.
+`src` must be an absolute path to the built module (usually the `lib/` or `dist/` directory of the module's repository), not its source code.
 
-Local modules are served at `https://element.example.com/element-modules/<name>/` (below `matrix_client_element_path_prefix`, if you changed it). Their URL in `config.json` includes a hash of the entry file (`index.js?v=…`), so browsers load a new version as soon as you update the module and re-run the playbook. Modules you remove from the list are deleted from the server.
+Local modules are served at `https://element.example.com/element-modules/<name>/` (below `matrix_client_element_path_prefix`, if you changed it). Their URL in `config.json` includes a hash of the entry file (`index.js?v=…`), so browsers load a new version as soon as the entry file changes and you re-run the playbook. Other files of a module aren't covered by that hash, so modules made of several files should use content-hashed file names (Vite does this for code-split chunks by default).
+
+Files of modules you remove from the list stay on the server (in `/matrix/client-element/modules/`), because the running Element Web may still reference them until it restarts. Delete them by hand once Element Web has restarted, if you like.
 
 **Notes**:
 
 - Don't mount modules into the container's `/modules` directory (e.g. with `matrix_client_element_container_extra_arguments`). The Element Web image only adds modules found there to `config.json`, but the playbook also installs the same configuration as `config.element.example.com.json`, and Element Web prefers that file. Such modules would never load.
+- `url` must be a path on Element Web's own host (starting with `/`). Element Web's Content Security Policy only allows scripts from its own origin, so a module on another host (a CDN, GitHub, …) is blocked, and a module that fails to load stops Element Web from loading at all.
 - If you set `modules` in `matrix_client_element_configuration_extension_json`, that list replaces the one generated from `matrix_client_element_modules`.
 
 ## Disabling Element Web

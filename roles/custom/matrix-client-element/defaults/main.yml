@@ -335,15 +335,18 @@ matrix_client_element_setting_defaults_custom_themes: []  # noqa var-naming
 #
 # Each entry is a dictionary with these keys:
 # - `name`: a unique name for the module (lowercase letters, digits, `.`, `_` and `-`)
-# - `src`: a directory on the Ansible controller holding the built module. Its contents get copied to
-#   `matrix_client_element_modules_path/<name>/` and are served at `<path prefix>element-modules/<name>/`.
-# - `entry` (optional, default: `index.js`): the file in `src` that Element Web loads.
-# - `url` (instead of `src`): the URL of a module hosted elsewhere. Nothing is copied.
+# - `src`: the absolute path of a directory on the Ansible controller holding the built module. Its contents get
+#   copied to `matrix_client_element_modules_path/<name>/` and are served at `<path prefix>element-modules/<name>/`.
+# - `entry` (optional, default: `index.js`): the file in `src` that Element Web loads (a relative path).
+# - `url` (instead of `src`): the path of a module that something else serves on Element Web's own host,
+#   e.g. `/custom-modules/example/index.js`. It must start with `/`: Element Web's Content Security Policy
+#   only allows scripts from its own origin, and a module that fails to load stops Element Web from loading.
 # - `config` (optional): a dictionary that gets merged into the Element Web configuration,
 #   for the module's own settings.
 #
-# The URL of each local module carries a hash of its entry file (`?v=<hash>`),
-# so browsers load the new version as soon as the module changes.
+# The URL of each local module carries a hash of its entry file (`?v=<hash>`), so browsers load the new
+# version as soon as the entry file changes. Other files are not covered: modules that consist of several files
+# should give them content-hashed names (Vite's default for code-split chunks).
 #
 # Example:
 # matrix_client_element_modules:
@@ -352,14 +355,13 @@ matrix_client_element_setting_defaults_custom_themes: []  # noqa var-naming
 #     config:
 #       com.example.my_module:
 #         some_setting: true
-#   - name: remote-example
-#     url: "https://modules.example.com/remote-example/index.js"
 matrix_client_element_modules: []
 
 # The directory on the server holding the files of local modules (those with `src`).
 matrix_client_element_modules_path: "{{ matrix_client_element_data_path }}/modules"
 
 # The URL path under which local modules are served (relative to `matrix_client_element_path_prefix`).
+# It must not start with `modules` or `config`: the image's nginx serves those paths from elsewhere.
 matrix_client_element_modules_url_path: element-modules
 
 matrix_client_element_modules_local: "{{ matrix_client_element_modules | selectattr('src', 'defined') | list }}"
@@ -377,11 +379,16 @@ matrix_client_element_modules_urls: |-
   {% endfor %}
   {{ ns.urls }}
 
+# The `modules` list and the modules' own `config`, merged into the Element Web configuration
+# between `matrix_client_element_configuration_default` and `matrix_client_element_configuration_extension`.
 matrix_client_element_modules_configuration: |-
   {% set ns = namespace(config={}) %}
   {% for module in matrix_client_element_modules %}
   {% set ns.config = ns.config | combine(module.config | default({}), recursive=True) %}
   {% endfor %}
+  {% if matrix_client_element_modules | length > 0 %}
+  {% set ns.config = ns.config | combine({'modules': matrix_client_element_modules_urls}) %}
+  {% endif %}
   {{ ns.config }}
 
 # Default Element Web configuration template which covers the generic use case.
